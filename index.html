@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP 산업 동향 및 시장 조사 인포그래픽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .space-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: radial-gradient(ellipse at center, rgba(41, 128, 185, 0.1) 0%, transparent 70%),
+                        radial-gradient(ellipse at top right, rgba(155, 89, 182, 0.1) 0%, transparent 70%),
+                        radial-gradient(ellipse at bottom left, rgba(52, 152, 219, 0.1) 0%, transparent 70%);
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #eee, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: twinkle 10s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.3; }
+        }
+
+        .orbit-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 600px;
+            height: 600px;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .orbit {
+            position: absolute;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: rotate 30s linear infinite;
+        }
+
+        .orbit:nth-child(1) {
+            width: 200px;
+            height: 200px;
+            top: 200px;
+            left: 200px;
+            animation-duration: 20s;
+        }
+
+        .orbit:nth-child(2) {
+            width: 350px;
+            height: 350px;
+            top: 125px;
+            left: 125px;
+            animation-duration: 35s;
+            animation-direction: reverse;
+        }
+
+        .orbit:nth-child(3) {
+            width: 500px;
+            height: 500px;
+            top: 50px;
+            left: 50px;
+            animation-duration: 50s;
+        }
+
+        .rotating-object {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            border-radius: 8px;
+            top: -20px;
+            left: 50%;
+            margin-left: -20px;
+            animation: float 4s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .rotating-object:nth-child(2) {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            animation-delay: -1s;
+        }
+
+        .rotating-object:nth-child(3) {
+            background: linear-gradient(45deg, #ffd93d, #6bcf7f);
+            animation-delay: -2s;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-10px) scale(1.1); }
+        }
+
+        .futuristic-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .futuristic-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffff, transparent);
+            animation: scan 3s infinite;
+        }
+
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .futuristic-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(0, 255, 255, 0.1);
+            border-color: rgba(0, 255, 255, 0.5);
+        }
+
+        .neon-text {
+            font-family: 'Orbitron', monospace;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff;
+            color: #00ffff;
+        }
+
+        .hologram-text {
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ff00);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: hologram 3s ease-in-out infinite;
+        }
+
+        @keyframes hologram {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .neural-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: grid-flow 10s linear infinite;
+        }
+
+        @keyframes grid-flow {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+
+        .ai-node {
+            width: 12px;
+            height: 12px;
+            background: #00ffff;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 0 15px #00ffff;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.7; }
+        }
+
+        .section-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .kpi-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 3rem;
+            font-weight: 900;
+            line-height: 1;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+        }
+
+        .kpi-label {
+            font-size: 1rem;
+            color: #ffffff;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-left: 2px solid #00ffff;
+        }
+
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -0.5625rem;
+            top: 0.25rem;
+            width: 1.125rem;
+            height: 1.125rem;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            border: 2px solid #000;
+            box-shadow: 0 0 15px #00ffff;
+            animation: pulse 2s infinite;
+        }
+
+        .mcp-block {
+            border: 2px solid #00ffff;
+            padding: 1rem;
+            border-radius: 15px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .mcp-block:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+
+        .mcp-arrow, .mcp-horizontal-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #00ffff;
+            margin: 0.5rem 0;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            background: rgba(0, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%);
+            border-radius: 30px;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+            animation: rotate 10s linear infinite;
+        }
+
+        .floating-element {
+            position: absolute;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(odd) {
+            animation-delay: -3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="space-bg"></div>
+    <div class="stars"></div>
+    <div class="neural-grid"></div>
+
+    <!-- 3D Rotating Objects Background -->
+    <div class="orbit-container">
+        <div class="orbit">
+            <div class="rotating-object"></div>
+        </div>
+        <div class="orbit">
+            <div class="rotating-object"></div>
+        </div>
+        <div class="orbit">
+            <div class="rotating-object"></div>
+        </div>
+    </div>
+
+    <!-- AI Nodes scattered around -->
+    <div class="ai-node" style="top: 10%; left: 15%;"></div>
+    <div class="ai-node" style="top: 20%; right: 20%;"></div>
+    <div class="ai-node" style="top: 60%; left: 10%;"></div>
+    <div class="ai-node" style="bottom: 15%; right: 15%;"></div>
+    <div class="ai-node" style="top: 80%; left: 70%;"></div>
+
+    <div class="relative z-10 p-4 md:p-8">
+        <header class="hero-section mb-12 md:mb-16 relative z-10">
+            <h1 class="text-4xl md:text-6xl font-bold hologram-text mb-4 font-orbitron">모델 컨텍스트 프로토콜(MCP)</h1>
+            <p class="text-xl md:text-2xl text-cyan-300">AI 통합의 혁명: 산업 동향 및 시장 분석</p>
+        </header>
+
+        <main class="space-y-12 md:space-y-16">
+
+            <section id="intro" class="futuristic-card text-center">
+                <h2 class="section-title neon-text">MCP란 무엇인가?</h2>
+                <p class="text-lg md:text-xl mb-4 text-gray-200">
+                    모델 컨텍스트 프로토콜(MCP)은 AI 모델이 외부 도구, 시스템, 데이터 소스와 원활하게 데이터를 통합하고 공유하는 방식을 표준화하는 <strong class="text-cyan-400">개방형 프레임워크</strong>입니다. "AI 앱의 USB-C"로 불리며, AI 개발의 복잡성을 줄이고 상호 운용성을 극대화합니다.
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8">
+                    <div class="p-6 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg backdrop-blur-sm border border-cyan-500/30">
+                        <div class="kpi-value">2024<span class="text-2xl">년</span></div>
+                        <div class="kpi-label">앤트로픽 공개</div>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-lg backdrop-blur-sm border border-purple-500/30">
+                        <div class="kpi-value">1K+</div>
+                        <div class="kpi-label">오픈소스 커넥터 (2025년 초)</div>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-green-500/20 to-teal-600/20 rounded-lg backdrop-blur-sm border border-green-500/30">
+                        <div class="kpi-value">M+N</div>
+                        <div class="kpi-label">통합 복잡도 감소</div>
+                    </div>
+                </div>
+                <p class="mt-6 text-md text-gray-300">MCP는 AI가 정보 사일로에서 벗어나 더 정교하고 맥락에 맞는 응답을 제공하도록 지원합니다.</p>
+            </section>
+
+            <section id="market-growth" class="futuristic-card">
+                <h2 class="section-title neon-text">MCP의 부상: 시장 동향</h2>
+                <p class="text-center text-gray-200 mb-8">MCP는 주요 AI 기업들의 참여와 함께 빠르게 성장하며 산업 표준으로 자리매김하고 있습니다. 이는 AI 통합 방식의 근본적인 변화를 예고합니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3 text-cyan-400">주요 기업 채택 타임라인</h3>
+                        <div class="space-y-4">
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <p class="font-semibold text-white">2024년 11월</p>
+                                <p class="text-sm text-gray-300">앤트로픽, MCP 공개</p>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <p class="font-semibold text-white">2025년 3월 (예상)</p>
+                                <p class="text-sm text-gray-300">OpenAI, MCP 공식 채택 발표 (보고서 기반 가상)</p>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <p class="font-semibold text-white">2025년 4월 (예상)</p>
+                                <p class="text-sm text-gray-300">Google DeepMind, Gemini 모델 MCP 지원 확인 (보고서 기반 가상)</p>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <p class="font-semibold text-white">지속적 확장</p>
+                                <p class="text-sm text-gray-300">IBM, Microsoft, Block 등 다수 기업 참여 및 SDK 확장</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3 text-center text-purple-400">MCP 커넥터 성장 전망 (가상 데이터)</h3>
+                        <div class="chart-container h-64 md:h-80">
+                            <canvas id="connectorGrowthChart"></canvas>
+                        </div>
+                        <p class="text-sm text-center text-gray-300 mt-2">MCP 생태계는 오픈소스 커넥터 수를 기반으로 폭발적으로 성장할 것으로 예상됩니다.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="core-concepts" class="futuristic-card">
+                <h2 class="section-title neon-text">MCP 핵심 개념 시각화</h2>
+                <p class="text-center text-gray-200 mb-8">MCP는 명확한 아키텍처와 핵심 기능을 통해 AI와 외부 시스템 간의 효율적인 상호작용을 지원합니다.</p>
+
+                <div class="mb-10">
+                    <h3 class="text-xl font-semibold text-center mb-4 text-cyan-400">MCP 아키텍처: 호스트-클라이언트-서버</h3>
+                    <div class="flex flex-col md:flex-row justify-around items-center space-y-4 md:space-y-0 md:space-x-4 p-4 rounded-lg">
+                        <div class="mcp-block md:w-1/4">
+                            <strong class="text-cyan-400">MCP 호스트</strong>
+                            <p class="text-xs text-gray-300">(예: Claude Desktop, AI IDE)</p>
+                            <p class="text-xs mt-1 text-gray-400">LLM 기반 주 애플리케이션, 시스템 조정</p>
+                        </div>
+                        <div class="mcp-horizontal-arrow hidden md:flex">&#x27FA;</div> 
+                        <div class="mcp-arrow md:hidden">&#x21D5;</div> 
+                        <div class="mcp-block md:w-1/4">
+                            <strong class="text-purple-400">MCP 클라이언트</strong>
+                            <p class="text-xs text-gray-300">(호스트 내 커넥터)</p>
+                            <p class="text-xs mt-1 text-gray-400">LLM-서버 통신 조정, 세션 관리</p>
+                        </div>
+                        <div class="mcp-horizontal-arrow hidden md:flex">&#x27FA;</div> 
+                        <div class="mcp-arrow md:hidden">&#x21D5;</div> 
+                        <div class="mcp-block md:w-1/4">
+                            <strong class="text-pink-400">MCP 서버</strong>
+                            <p class="text-xs text-gray-300">(외부 서비스/데이터 노출)</p>
+                            <p class="text-xs mt-1 text-gray-400">도구, 리소스, 프롬프트 제공</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-center text-gray-300 mt-4">JSON-RPC 2.0 기반 메시징 (STDIO 또는 HTTP+SSE 전송)</p>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-center mb-6 text-purple-400">MCP 서버의 핵심 기능</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="p-6 border-2 border-cyan-500/50 rounded-lg bg-gradient-to-br from-cyan-500/10 to-transparent text-center hover:shadow-xl transition-all hover:border-cyan-400">
+                            <div class="text-4xl mb-3">🛠️</div>
+                            <h4 class="font-semibold text-lg mb-1 text-cyan-400">도구 (Tools)</h4>
+                            <p class="text-sm text-gray-300">실행 가능한 기능 및 액션. AI가 특정 작업을 수행 (예: API 호출, 데이터베이스 쓰기).</p>
+                        </div>
+                        <div class="p-6 border-2 border-purple-500/50 rounded-lg bg-gradient-to-br from-purple-500/10 to-transparent text-center hover:shadow-xl transition-all hover:border-purple-400">
+                            <div class="text-4xl mb-3">📚</div>
+                            <h4 class="font-semibold text-lg mb-1 text-purple-400">리소스 (Resources)</h4>
+                            <p class="text-sm text-gray-300">컨텍스트 제공을 위한 데이터. AI의 이해 및 응답 생성 지원 (예: 파일 읽기, DB 조회).</p>
+                        </div>
+                        <div class="p-6 border-2 border-pink-500/50 rounded-lg bg-gradient-to-br from-pink-500/10 to-transparent text-center hover:shadow-xl transition-all hover:border-pink-400">
+                            <div class="text-4xl mb-3">🔄</div>
+                            <h4 class="font-semibold text-lg mb-1 text-pink-400">프롬프트 (Prompts)</h4>
+                            <p class="text-sm text-gray-300">재사용 가능한 워크플로우 및 템플릿. 반복 작업 표준화 및 사용자 경험 향상.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="benefits" class="futuristic-card">
+                <h2 class="section-title neon-text">MCP 도입의 혁신적 이점</h2>
+                <p class="text-center text-gray-200 mb-8">MCP는 기존 AI 통합 방식의 고질적인 문제들을 해결하여 개발 효율성과 시스템 확장성을 크게 향상시킵니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="p-6 bg-gradient-to-br from-red-500/20 to-red-700/20 border-l-4 border-red-500 rounded-r-lg backdrop-blur-sm">
+                        <h3 class="font-semibold text-lg mb-2 text-red-400">기존 방식의 문제점: M×N 통합</h3>
+                        <p class="text-sm text-gray-300 mb-3">M개의 애플리케이션과 N개의 데이터 소스를 연결하기 위해 M×N개의 맞춤형 통합 작업 필요.</p>
+                        <div class="flex justify-center items-center h-32 bg-red-500/10 rounded-md p-2">
+                            <p class="text-red-400 font-mono text-sm text-center">
+                                App1 ↔ API_A, App1 ↔ DB_B, App1 ↔ Tool_C ... <br/>
+                                App2 ↔ API_A, App2 ↔ DB_B, App2 ↔ Tool_C ... <br/>
+                                (복잡도 증가, 비효율, 파편화)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-green-500/20 to-green-700/20 border-l-4 border-green-500 rounded-r-lg backdrop-blur-sm">
+                        <h3 class="font-semibold text-lg mb-2 text-green-400">MCP 해결책: M+N 통합</h3>
+                        <p class="text-sm text-gray-300 mb-3">표준화된 MCP 인터페이스를 통해 각 애플리케이션과 소스가 한 번만 연동.</p>
+                        <div class="flex justify-center items-center h-32 bg-green-500/10 rounded-md p-2">
+                            <p class="text-green-400 font-mono text-sm text-center">
+                                App1 ↔ MCP ↔ API_A <br/>
+                                App2 ↔ MCP ↔ DB_B <br/>
+                                (단순화, 효율성 증대, 상호 운용성)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 text-center">
+                    <h4 class="text-xl font-semibold mb-3 text-cyan-400">주요 기대 효과</h4>
+                    <ul class="list-disc list-inside inline-block text-left text-gray-300 space-y-1">
+                        <li>컨텍스트 파편화 해소 및 동적 컨텍스트 접근</li>
+                        <li>모델/공급업체에 구애받지 않는 상호 운용성 증진</li>
+                        <li>에이전트 AI 시스템 발전 가속화</li>
+                        <li>개발 생산성 및 유지보수성 향상</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="use-cases" class="futuristic-card">
+                <h2 class="section-title neon-text">다양한 산업 분야의 MCP 활용</h2>
+                <p class="text-center text-gray-200 mb-8">MCP는 기업 내부 시스템 연동부터 개발자 생산성 향상, 고객 서비스 자동화, 데이터 분석 등 광범위한 분야에 적용 가능합니다.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="p-6 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg backdrop-blur-sm border border-cyan-500/30 hover:shadow-xl transition-all hover:border-cyan-400">
+                        <div class="text-3xl mb-3">🏢</div>
+                        <h4 class="font-semibold text-lg mb-1 text-cyan-400">엔터프라이즈 AI</h4>
+                        <p class="text-sm text-gray-300">내부 어시스턴트, CRM/지식베이스 통합, 독점 데이터 접근 및 자동화된 워크플로우 구축.</p>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-lg backdrop-blur-sm border border-purple-500/30 hover:shadow-xl transition-all hover:border-purple-400">
+                        <div class="text-3xl mb-3">💻</div>
+                        <h4 class="font-semibold text-lg mb-1 text-purple-400">개발자 생산성</h4>
+                        <p class="text-sm text-gray-300">AI 기반 IDE, 코드 컨텍스트 접근, 코드 생성 및 컨텍스트 인식 버그 수정 지원.</p>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-pink-500/20 to-pink-600/20 rounded-lg backdrop-blur-sm border border-pink-500/30 hover:shadow-xl transition-all hover:border-pink-400">
+                        <div class="text-3xl mb-3">💬</div>
+                        <h4 class="font-semibold text-lg mb-1 text-pink-400">고객 서비스 자동화</h4>
+                        <p class="text-sm text-gray-300">실시간 고객 데이터 접근, 개인화된 응답, 에스컬레이션 및 상담원 이관 효율화.</p>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg backdrop-blur-sm border border-green-500/30 hover:shadow-xl transition-all hover:border-green-400">
+                        <div class="text-3xl mb-3">📊</div>
+                        <h4 class="font-semibold text-lg mb-1 text-green-400">데이터 분석 & BI</h4>
+                        <p class="text-sm text-gray-300">자연어 질의를 통한 데이터베이스 검색, 시각화 생성, 다단계 분석 지원.</p>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 rounded-lg backdrop-blur-sm border border-yellow-500/30 hover:shadow-xl transition-all hover:border-yellow-400">
+                        <div class="text-3xl mb-3">⚕️</div>
+                        <h4 class="font-semibold text-lg mb-1 text-yellow-400">헬스케어</h4>
+                        <p class="text-sm text-gray-300">EHR 접근, AI 진단 지원, 연구 문서 분석 등 의료 분야 혁신.</p>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-indigo-500/20 to-indigo-600/20 rounded-lg backdrop-blur-sm border border-indigo-500/30 hover:shadow-xl transition-all hover:border-indigo-400">
+                        <div class="text-3xl mb-3">🏦</div>
+                        <h4 class="font-semibold text-lg mb-1 text-indigo-400">금융 및 제조</h4>
+                        <p class="text-sm text-gray-300">위험 평가, 사기 탐지, 공급망 최적화 등 산업별 특화 솔루션.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="ecosystem" class="futuristic-card">
+                <h2 class="section-title neon-text">성장하는 MCP 생태계</h2>
+                <p class="text-center text-gray-200 mb-8">앤트로픽, OpenAI, Google 등 주요 기업들의 참여와 다양한 SDK 지원으로 MCP 생태계는 빠르게 확장되고 있습니다.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-cyan-400">주요 참여 기업 (텍스트 로고)</h3>
+                        <div class="flex flex-wrap gap-4 justify-center">
+                            <span class="p-3 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-white rounded-md font-semibold border border-cyan-500/30">Anthropic</span>
+                            <span class="p-3 bg-gradient-to-r from-green-500/20 to-teal-500/20 text-white rounded-md font-semibold border border-green-500/30">OpenAI</span>
+                            <span class="p-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white rounded-md font-semibold border border-purple-500/30">Google</span>
+                            <span class="p-3 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-white rounded-md font-semibold border border-blue-500/30">Microsoft</span>
+                            <span class="p-3 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-white rounded-md font-semibold border border-indigo-500/30">IBM</span>
+                            <span class="p-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-white rounded-md font-semibold border border-yellow-500/30">Block</span>
+                            <span class="p-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 text-white rounded-md font-semibold border border-red-500/30">JetBrains</span>
+                            <span class="p-3 bg-gradient-to-r from-teal-500/20 to-cyan-500/20 text-white rounded-md font-semibold border border-teal-500/30">Sourcegraph</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-purple-400">주요 MCP SDK 현황</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg shadow">
+                                <thead class="bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white">
+                                    <tr>
+                                        <th class="py-2 px-4 border-b border-white/20 text-left">언어</th>
+                                        <th class="py-2 px-4 border-b border-white/20 text-left">주요 관리자</th>
+                                        <th class="py-2 px-4 border-b border-white/20 text-left">핵심 기능</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="hover:bg-white/5">
+                                        <td class="py-2 px-4 border-b border-white/10 text-white">Python</td>
+                                        <td class="py-2 px-4 border-b border-white/10 text-gray-300">Anthropic</td>
+                                        <td class="py-2 px-4 border-b border-white/10 text-gray-300">서버/클라이언트 생성, 기능 정의</td>
+                                    </tr>
+                                    <tr class="hover:bg-white/5">
+                                        <td class="py-2 px-4 border-b border-white/10 text-white">TypeScript</td>
+                                        <td class="py-2 px-4 border-b border-white/10 text-gray-300">Anthropic</td>
+                                        <td class="py-2 px-4 border-b border-white/10 text-gray-300">서버/클라이언트 생성, 스키마 검사</td>
+                                    </tr>
+                                    <tr class="hover:bg-white/5">
+                                        <td class="py-2 px-4 border-b border-white/10 text-white">Java</td>
+                                        <td class="py-2 px-4 border-b border-white/10 text-gray-300">Anthropic (Spring AI 협력)</td>
+                                        <td class="py-2 px-4 border-b border-white/10 text-gray-300">서버/클라이언트 지원</td>
+                                    </tr>
+                                    <tr class="hover:bg-white/5">
+                                        <td class="py-2 px-4 border-b border-white/10 text-white">C#</td>
+                                        <td class="py-2 px-4 border-b border-white/10 text-gray-300">Anthropic (Microsoft 협력)</td>
+                                        <td class="py-2 px-4 border-b border-white/10 text-gray-300">서버/클라이언트 지원</td>
+                                    </tr>
+                                    <tr class="hover:bg-white/5">
+                                        <td class="py-2 px-4 border-b border-white/10 text-white">Rust, Swift 등</td>
+                                        <td class="py-2 px-4 border-b border-white/10 text-gray-300">Anthropic/커뮤니티</td>
+                                        <td class="py-2 px-4 border-b border-white/10 text-gray-300">서버/클라이언트 지원 확장 중</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="future-outlook" class="futuristic-card">
+                <h2 class="section-title neon-text">MCP의 미래: 혁신은 계속된다</h2>
+                <p class="text-center text-gray-200 mb-8">MCP는 공식 로드맵과 커뮤니티 주도 혁신을 통해 더욱 강력하고 광범위한 AI 시스템을 지원하는 핵심 프로토콜로 발전할 것입니다.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold mb-3 text-cyan-400">단기-중기 로드맵</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-300">
+                            <li>유효성 검사 도구 및 테스트 스위트 개발</li>
+                            <li>참조 클라이언트 및 예제 애플리케이션 확대</li>
+                            <li>중앙 집중식 MCP 서버 레지스트리 구축</li>
+                            <li>핵심 기능 강화 및 보안 모델 개선</li>
+                        </ul>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold mb-3 text-purple-400">장기 비전</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-300">
+                            <li>복잡한 다중 에이전트 워크플로우 ("에이전트 그래프") 지원</li>
+                            <li>이미지, 오디오, 비디오 등 멀티모달 기능 추가</li>
+                            <li>공식 거버넌스 구조 및 표준화 기구 확립</li>
+                            <li>LLM의 기본 네트워킹 프로토콜로 발전 가능성</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-8 text-center">
+                    <p class="text-md text-cyan-400 font-semibold">🚀 커뮤니티 주도 혁신과 새로운 연구를 통해 MCP는 AI의 미래를 만들어갑니다.</p>
+                </div>
+            </section>
+
+            <section id="conclusion" class="text-center py-10 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-cyan-500/30 rounded-lg relative overflow-hidden">
+                <div class="relative z-10">
+                    <h2 class="text-3xl font-bold mb-4 hologram-text font-orbitron">MCP: AI 통합의 미래를 열다</h2>
+                    <p class="text-lg md:text-xl max-w-3xl mx-auto mb-6 text-gray-200">
+                        MCP는 AI 시스템과 외부 세계 간의 상호작용을 표준화하여 개발 효율성을 높이고, 더욱 지능적이고 자율적인 AI 시대를 앞당기는 핵심 기술입니다.
+                        표준화, 상호 운용성, 개방성을 통해 MCP는 AI 혁신의 새로운 지평을 열 것입니다.
+                    </p>
+                    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-semibold py-3 px-8 rounded-lg shadow-md hover:from-cyan-400 hover:to-purple-400 transition-all transform hover:scale-105">
+                        맨 위로 돌아가기
+                    </button>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="text-center mt-12 md:mt-16 py-8 border-t border-cyan-500/30">
+            <p class="text-sm text-gray-400">&copy; <span id="currentYear"></span> MCP 인포그래픽. 모델 컨텍스트 프로토콜 심층 연구 보고서 기반.</p>
+            <p class="text-xs text-gray-500 mt-1">이 인포그래픽은 제공된 연구 보고서의 내용을 요약 및 시각화한 것이며, 일부 데이터는 예시 또는 가상으로 구성될 수 있습니다. SVG 및 Mermaid JS를 사용하지 않았습니다.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Chart.js Label Wrapping and Tooltip Config
+        const processLabels = (labels) => {
+            return labels.map(label => {
+                if (typeof label === 'string' && label.length > 16) {
+                    const words = label.split(' ');
+                    const lines = [];
+                    let currentLine = '';
+                    for (const word of words) {
+                        if ((currentLine + word).length > 16 && currentLine.length > 0) {
+                            lines.push(currentLine.trim());
+                            currentLine = word + ' ';
+                        } else {
+                            currentLine += word + ' ';
+                        }
+                    }
+                    if (currentLine.trim().length > 0) {
+                        lines.push(currentLine.trim());
+                    }
+                    return lines;
+                }
+                return label;
+            });
+        };
+
+        const tooltipTitleCallback = (tooltipItems) => {
+            const item = tooltipItems[0];
+            let label = item.chart.data.labels[item.dataIndex];
+            if (Array.isArray(label)) {
+                return label.join(' ');
+            }
+            return label;
+        };
+
+        // Connector Growth Chart (Line Chart - Mock Data)
+        const connectorGrowthCtx = document.getElementById('connectorGrowthChart').getContext('2d');
+        new Chart(connectorGrowthCtx, {
+            type: 'line',
+            data: {
+                labels: processLabels(['2024 Q4', '2025 Q1', '2025 Q2 (예상)', '2025 Q3 (전망)', '2025 Q4 (전망)']),
+                datasets: [{
+                    label: '누적 MCP 커넥터 수',
+                    data: [50, 200, 1000, 2500, 5000], // Mock data
+                    borderColor: '#00ffff',
+                    backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#00ffff',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#ffffff'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: tooltipTitleCallback
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#00ffff',
+                        bodyColor: '#ffffff'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { 
+                            display: true, 
+                            text: '커넥터 수',
+                            color: '#ffffff'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        title: { 
+                            display: true, 
+                            text: '분기',
+                            color: '#ffffff'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
