@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google & FastAPI 연동 기술 트렌드 인포그래픽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <!-- Application Structure Plan: The infographic SPA is structured as a single, scrollable page divided into logical sections reflecting the key themes of the source report.
+        1.  **Hero/Introduction:** Title, brief overview of modern authentication importance.
+        2.  **Core Concepts (OAuth & OIDC):** Explaining these foundational technologies side-by-side.
+        3.  **The Advantage (Benefits of Integration):** Highlighting key benefits using impactful visuals/icons.
+        4.  **Integration Blueprint (Architecture Overview):** HTML/CSS based flowchart for the general architecture.
+        5.  **Setup Guide (Google Cloud Configuration):** Step-by-step visual guide (HTML/CSS) for GCP setup.
+        6.  **Permission Strategy (Scopes):** Visually presenting key OAuth scopes.
+        7.  **Implementation Pathways (FastAPI Backend Options):** Comparing `fastapi-users` vs. custom implementation using a conceptual Chart.js bar chart and a summary table. Includes an HTML/CSS flowchart for the Authorization Code Flow.
+        8.  **Data Stewardship (User Information Management):** Displaying key DB fields in a table and comparing ORM/ODM choices.
+        9.  **Advanced Insights & Security Best Practices:** Key takeaways on advanced topics like token refresh and security measures.
+        10. **Conclusion:** Summarizing the strategic value.
+        This narrative flow aims to guide the user from foundational concepts to practical implementation details and strategic considerations, making complex technical information digestible.
+    -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Section 1.1 (OAuth 2.0 & OIDC) -> Goal: Inform -> Viz: Side-by-side descriptive cards. -> Justification: Clear comparison of related concepts. -> Method: HTML/CSS with Tailwind.
+        - Report Info: Section 1.2 (Benefits) -> Goal: Inform -> Viz: Icon-driven list with large text for benefits. -> Justification: Visually engaging and quick to scan. -> Method: HTML/CSS/Unicode Icons with Tailwind.
+        - Report Info: Section 1.3 (Architecture) -> Goal: Organize/Inform -> Viz: HTML/CSS flowchart. -> Justification: Visualizes process flow clearly without SVG/Mermaid. -> Method: HTML/CSS with Tailwind (flexbox/grid, borders).
+        - Report Info: Section 2.1 & 2.2 (GCP Setup) -> Goal: Organize/Inform -> Viz: Stepped HTML/CSS diagram. -> Justification: Clear, step-by-step guide. -> Method: HTML/CSS with Tailwind.
+        - Report Info: Section 2.3 (Scopes) -> Goal: Inform -> Viz: List/card-based presentation of key scopes. -> Justification: Easy to read and understand permission types. -> Method: HTML/CSS with Tailwind.
+        - Report Info: Section 3 (Implementation Options) -> Goal: Compare -> Viz: Conceptual Bar Chart (Chart.js - Dev Speed vs. Customization) & HTML Table (Library Comparison). -> Justification: Visual and tabular comparison of approaches. -> Method: Chart.js (Canvas) for chart, HTML/CSS for table.
+        - Report Info: Section 3.3 (Auth Code Flow) -> Goal: Organize/Inform -> Viz: HTML/CSS flowchart. -> Justification: Details a critical process visually. -> Method: HTML/CSS with Tailwind.
+        - Report Info: Section 4.1 (DB Fields Table) -> Goal: Inform/Organize -> Viz: HTML table. -> Justification: Structured presentation of data fields. -> Method: HTML/CSS with Tailwind.
+        - Report Info: Section 4 (ORM/ODM Comparison - implicit from 4.3, 4.4, 4.5) -> Goal: Compare -> Viz: HTML comparison table. -> Justification: Summarizes DB technology choices. -> Method: HTML/CSS with Tailwind.
+        - Report Info: Section 5 (Advanced Topics/Security) -> Goal: Inform -> Viz: Icon-driven highlights. -> Justification: Quickly conveys important considerations. -> Method: HTML/CSS/Unicode Icons with Tailwind.
+        CONFIRMING NO SVG/Mermaid used for any visualization.
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+        @media (max-width: 768px) { .chart-container { height: 300px; max-height: 350px; } }
+        .flowchart-step {
+            border: 2px solid #007EA7; /* Medium Blue */
+            background-color: #FFFFFF;
+            color: #003459; /* Dark Blue */
+        }
+        .flowchart-arrow { color: #007EA7; /* Medium Blue */ }
+        .section-title { color: #003459; /* Dark Blue */ border-bottom: 3px solid #00A8E8; /* Bright Blue */ padding-bottom: 0.5rem; }
+        .stat-card { background-color: #007EA7; /* Medium Blue */ color: #FFFFFF; }
+        .stat-number { color: #94D2BD; /* Light Teal Accent */ }
+        .table th { background-color: #003459; color: #FFFFFF; }
+        .table td { background-color: #FFFFFF; color: #003459; }
+        .table tr:nth-child(even) td { background-color: #f0f9ff; /* very light blue, Tailwind's sky-50 */}
+        .nav-link { transition: all 0.3s ease; }
+        .nav-link.active { color: #00A8E8; /* Bright Blue */ font-weight: bold; border-bottom-color: #00A8E8; }
+        .card { background-color: white; border-left: 5px solid #00A8E8; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <nav class="sticky top-0 z-50 bg-white shadow-md">
+        <div class="container mx-auto px-6 py-3 flex flex-wrap justify-center items-center">
+            <a href="#introduction" class="nav-link text-gray-700 hover:text-[#00A8E8] mx-2 sm:mx-3 py-1 border-b-2 border-transparent">소개</a>
+            <a href="#concepts" class="nav-link text-gray-700 hover:text-[#00A8E8] mx-2 sm:mx-3 py-1 border-b-2 border-transparent">핵심 개념</a>
+            <a href="#architecture" class="nav-link text-gray-700 hover:text-[#00A8E8] mx-2 sm:mx-3 py-1 border-b-2 border-transparent">아키텍처</a>
+            <a href="#implementation" class="nav-link text-gray-700 hover:text-[#00A8E8] mx-2 sm:mx-3 py-1 border-b-2 border-transparent">구현 전략</a>
+            <a href="#database" class="nav-link text-gray-700 hover:text-[#00A8E8] mx-2 sm:mx-3 py-1 border-b-2 border-transparent">데이터 관리</a>
+            <a href="#security" class="nav-link text-gray-700 hover:text-[#00A8E8] mx-2 sm:mx-3 py-1 border-b-2 border-transparent">보안</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4 sm:p-8">
+
+        <section id="introduction" class="py-12 sm:py-16 text-center bg-white rounded-lg shadow-xl mb-12 p-8">
+            <h1 class="text-4xl sm:text-5xl font-bold mb-4 text-[#003459]">Google & FastAPI 연동: 기술 트렌드 및 활용 전략</h1>
+            <p class="text-xl text-gray-700 mb-6 max-w-3xl mx-auto">
+                현대 애플리케이션 환경에서 사용자 인증은 핵심 요소입니다. 본 인포그래픽은 Google 로그인 API와 FastAPI 프레임워크 연동의 주요 개념, 이점, 구현 전략 및 데이터 관리 방안을 심층적으로 분석하여 최신 기술 트렌드와 모범 사례를 제시합니다.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 max-w-4xl mx-auto">
+                <div class="stat-card p-6 rounded-lg shadow-md text-center">
+                    <div class="text-5xl mb-2">🚀</div>
+                    <h3 class="text-2xl font-semibold mb-1">향상된 UX</h3>
+                    <p class="text-sm opacity-90">간소화된 로그인 프로세스</p>
+                </div>
+                <div class="stat-card p-6 rounded-lg shadow-md text-center">
+                    <div class="text-5xl mb-2">🛡️</div>
+                    <h3 class="text-2xl font-semibold mb-1">강화된 보안</h3>
+                    <p class="text-sm opacity-90">Google 인프라 활용</p>
+                </div>
+                <div class="stat-card p-6 rounded-lg shadow-md text-center">
+                    <div class="text-5xl mb-2">⚙️</div>
+                    <h3 class="text-2xl font-semibold mb-1">개발 효율성</h3>
+                    <p class="text-sm opacity-90">FastAPI의 강력한 기능</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="concepts" class="py-12 sm:py-16">
+            <h2 class="section-title text-3xl font-bold text-center mb-10">핵심 개념: OAuth 2.0와 OpenID Connect (OIDC)</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="card p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-semibold text-[#007EA7] mb-3">OAuth 2.0: 인가 프레임워크</h3>
+                    <p class="text-gray-700 mb-2">사용자가 비밀번호 공유 없이 특정 애플리케이션에 제한된 리소스 접근을 허용합니다. "무엇을 할 수 있는가"에 대한 권한을 다룹니다.</p>
+                    <ul class="list-disc list-inside text-gray-600 space-y-1 pl-2">
+                        <li>리소스 접근 권한 부여</li>
+                        <li>주요 역할: 클라이언트, 리소스 서버, 인증 서버</li>
+                        <li>토큰 기반: 접근 토큰(Access Token)</li>
+                    </ul>
+                </div>
+                <div class="card p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-semibold text-[#007EA7] mb-3">OpenID Connect (OIDC): 인증 프로토콜</h3>
+                    <p class="text-gray-700 mb-2">OAuth 2.0 위에 구축되어 사용자의 신원을 확인합니다. "누구인가"에 대한 신원 확인에 중점을 둡니다.</p>
+                    <ul class="list-disc list-inside text-gray-600 space-y-1 pl-2">
+                        <li>사용자 신원 확인</li>
+                        <li>주요 역할: Relying Party (RP), OpenID Provider (OP)</li>
+                        <li>토큰 기반: ID 토큰 (JWT 형식)</li>
+                    </ul>
+                </div>
+            </div>
+             <p class="mt-8 text-center text-gray-700 max-w-2xl mx-auto">
+                Google 로그인은 ID 토큰으로 사용자 신원을 확인(OIDC)하고, 접근 토큰으로 사용자를 대신하여 Google API에 접근(OAuth 2.0)합니다. 이 두 프로토콜은 상호 보완적으로 작동하여 안전하고 효율적인 인증 시스템을 구성합니다.
+            </p>
+        </section>
+
+        <section id="architecture" class="py-12 sm:py-16 bg-white rounded-lg shadow-xl mb-12 p-8">
+            <h2 class="section-title text-3xl font-bold text-center mb-12">연동 아키텍처 개요</h2>
+            <p class="text-center text-gray-700 mb-10 max-w-2xl mx-auto">Google 로그인과 FastAPI 연동은 다음과 같은 주요 구성 요소 간의 상호작용을 통해 이루어집니다. 모든 통신은 HTTPS를 통해 암호화되어야 합니다.</p>
+            <div class="flex flex-col md:flex-row justify-around items-center space-y-8 md:space-y-0 md:space-x-4">
+                <div class="flowchart-step p-4 rounded-lg text-center shadow-md w-full md:w-1/5">
+                    <div class="text-4xl mb-2">👤</div>
+                    <h4 class="font-semibold">1. 사용자</h4>
+                    <p class="text-xs">로그인 시작</p>
+                </div>
+                <div class="flowchart-arrow text-4xl hidden md:block">➔</div>
+                <div class="flowchart-arrow text-4xl md:hidden self-center transform rotate-90">➔</div>
+                <div class="flowchart-step p-4 rounded-lg text-center shadow-md w-full md:w-1/5">
+                    <div class="text-4xl mb-2">💻</div>
+                    <h4 class="font-semibold">2. 프론트엔드</h4>
+                    <p class="text-xs">요청 전달/리디렉션</p>
+                </div>
+                <div class="flowchart-arrow text-4xl hidden md:block">➔</div>
+                <div class="flowchart-arrow text-4xl md:hidden self-center transform rotate-90">➔</div>
+                <div class="flowchart-step p-4 rounded-lg text-center shadow-md w-full md:w-1/5">
+                     <div class="text-4xl mb-2">⚙️</div>
+                    <h4 class="font-semibold">3. FastAPI 백엔드</h4>
+                    <p class="text-xs">OAuth 흐름 조율, 토큰 요청/검증</p>
+                </div>
+                 <div class="flowchart-arrow text-4xl hidden md:block">↔️</div>
+                 <div class="flowchart-arrow text-4xl md:hidden self-center transform rotate-90">↔️</div>
+                <div class="flowchart-step p-4 rounded-lg text-center shadow-md w-full md:w-1/5">
+                    <div class="text-4xl mb-2">🌐</div>
+                    <h4 class="font-semibold">4. Google 인증 서버</h4>
+                    <p class="text-xs">사용자 인증, 토큰 발급</p>
+                </div>
+                <div class="flowchart-arrow text-4xl hidden md:block">➔</div>
+                <div class="flowchart-arrow text-4xl md:hidden self-center transform rotate-90">➔</div>
+                 <div class="flowchart-step p-4 rounded-lg text-center shadow-md w-full md:w-1/5">
+                    <div class="text-4xl mb-2">🗄️</div>
+                    <h4 class="font-semibold">5. 데이터베이스</h4>
+                    <p class="text-xs">사용자 정보 저장/관리</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="gcp-setup" class="py-12 sm:py-16">
+            <h2 class="section-title text-3xl font-bold text-center mb-12">Google Cloud 프로젝트 설정 가이드</h2>
+            <p class="text-center text-gray-700 mb-10 max-w-2xl mx-auto">FastAPI에서 Google 로그인을 사용하려면 Google Cloud Console에서 프로젝트 설정 및 OAuth 2.0 인증 정보 생성이 필요합니다.</p>
+            <ol class="space-y-6 max-w-3xl mx-auto">
+                <li class="card flex items-start p-6 rounded-lg shadow-lg">
+                    <div class="bg-[#00A8E8] text-white rounded-full h-10 w-10 flex items-center justify-center text-xl font-bold mr-4 flex-shrink-0">1</div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-[#007EA7] mb-1">프로젝트 생성 및 API 활성화</h4>
+                        <p class="text-gray-600 text-sm">Google Cloud Console에서 새 프로젝트를 만들거나 기존 프로젝트를 선택하고, 필요한 API (예: Google People API)를 활성화합니다.</p>
+                    </div>
+                </li>
+                <li class="card flex items-start p-6 rounded-lg shadow-lg">
+                    <div class="bg-[#00A8E8] text-white rounded-full h-10 w-10 flex items-center justify-center text-xl font-bold mr-4 flex-shrink-0">2</div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-[#007EA7] mb-1">OAuth 동의 화면 구성</h4>
+                        <p class="text-gray-600 text-sm">사용자에게 보여질 동의 화면을 설정합니다. 앱 이름, 로고, 지원 이메일, 요청 스코프, 개인정보처리방침 링크 등을 포함합니다.</p>
+                    </div>
+                </li>
+                <li class="card flex items-start p-6 rounded-lg shadow-lg">
+                    <div class="bg-[#00A8E8] text-white rounded-full h-10 w-10 flex items-center justify-center text-xl font-bold mr-4 flex-shrink-0">3</div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-[#007EA7] mb-1">OAuth 2.0 인증 정보 생성</h4>
+                        <p class="text-gray-600 text-sm">"웹 애플리케이션" 유형으로 클라이언트 ID와 클라이언트 보안 비밀을 발급받습니다. 클라이언트 보안 비밀은 안전하게 관리해야 합니다.</p>
+                    </div>
+                </li>
+                <li class="card flex items-start p-6 rounded-lg shadow-lg">
+                    <div class="bg-[#00A8E8] text-white rounded-full h-10 w-10 flex items-center justify-center text-xl font-bold mr-4 flex-shrink-0">4</div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-[#007EA7] mb-1">승인된 리디렉션 URI 설정</h4>
+                        <p class="text-gray-600 text-sm">Google 인증 후 사용자가 리디렉션될 백엔드 URI (예: `YOUR_DOMAIN/auth/callback`)를 정확히 등록합니다. 이는 보안에 매우 중요합니다.</p>
+                    </div>
+                </li>
+            </ol>
+        </section>
+
+        <section id="scopes" class="py-12 sm:py-16 bg-white rounded-lg shadow-xl mb-12 p-8">
+            <h2 class="section-title text-3xl font-bold text-center mb-12">스코프(Scopes): 권한 정의 및 요청</h2>
+            <p class="text-center text-gray-700 mb-10 max-w-2xl mx-auto">스코프는 애플리케이션이 사용자로부터 요청하는 데이터 및 권한의 범위를 정의합니다. 최소 권한 원칙에 따라 필요한 스코프만 요청하는 것이 중요합니다.</p>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="border-2 border-[#94D2BD] p-6 rounded-lg text-center bg-white hover:shadow-xl transition-shadow">
+                    <h4 class="text-lg font-semibold text-[#007EA7] mb-2"><code>openid</code></h4>
+                    <p class="text-sm text-gray-600">OIDC 인증에 필수적인 스코프입니다.</p>
+                </div>
+                <div class="border-2 border-[#94D2BD] p-6 rounded-lg text-center bg-white hover:shadow-xl transition-shadow">
+                    <h4 class="text-lg font-semibold text-[#007EA7] mb-2"><code>email</code></h4>
+                    <p class="text-sm text-gray-600">사용자의 이메일 주소를 요청합니다.</p>
+                </div>
+                <div class="border-2 border-[#94D2BD] p-6 rounded-lg text-center bg-white hover:shadow-xl transition-shadow">
+                    <h4 class="text-lg font-semibold text-[#007EA7] mb-2"><code>profile</code></h4>
+                    <p class="text-sm text-gray-600">기본 프로필 정보(이름, 프로필 사진 등)를 요청합니다.</p>
+                </div>
+            </div>
+            <p class="mt-8 text-center text-gray-700">애플리케이션이 Google Drive, Calendar 등 추가 Google API에 접근해야 하는 경우, 해당 API에 대한 특정 스코프를 명시적으로 요청해야 합니다. 민감한 스코프는 Google의 확인 절차가 필요할 수 있습니다.</p>
+        </section>
+
+        <section id="implementation" class="py-12 sm:py-16">
+            <h2 class="section-title text-3xl font-bold text-center mb-12">FastAPI 백엔드 구현 전략</h2>
+            <p class="text-center text-gray-700 mb-10 max-w-2xl mx-auto">FastAPI에서 Google 인증을 구현하는 두 가지 주요 접근 방식과 핵심 인가 코드 흐름을 살펴봅니다.</p>
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <div class="card p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-semibold text-[#007EA7] mb-3">구현 옵션 비교</h3>
+                    <p class="text-gray-700 mb-4"><code>fastapi-users</code> 라이브러리를 사용한 신속 통합과 <code>Authlib</code> 등을 사용한 사용자 정의 통합은 각각 장단점이 있습니다.</p>
+                    <div class="chart-container">
+                        <canvas id="implementationOptionsChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center mt-2 text-gray-500">개념적 비교: 개발 속도 vs 사용자 정의 수준</p>
+                </div>
+
+                <div class="card p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-semibold text-[#007EA7] mb-3">라이브러리 특징 요약</h3>
+                    <table class="table w-full text-sm mt-4 border rounded">
+                        <thead>
+                            <tr>
+                                <th class="p-2 border">특징</th>
+                                <th class="p-2 border">fastapi-users</th>
+                                <th class="p-2 border">Authlib/google-auth (사용자 정의)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="p-2 border font-medium">설정 용이성</td>
+                                <td class="p-2 border">높음</td>
+                                <td class="p-2 border">중간</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border font-medium">사용자 정의</td>
+                                <td class="p-2 border">중간</td>
+                                <td class="p-2 border">높음</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border font-medium">주요 기능</td>
+                                <td class="p-2 border">사용자 관리, DB 어댑터, OAuth 라우터 자동 생성</td>
+                                <td class="p-2 border">포괄적 OAuth/OIDC 클라이언트, JWT 처리</td>
+                            </tr>
+                             <tr>
+                                <td class="p-2 border font-medium">적합 사례</td>
+                                <td class="p-2 border">신속 개발, 표준 기능</td>
+                                <td class="p-2 border">복잡 요구사항, 높은 유연성</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-12 bg-white rounded-lg shadow-xl p-8">
+                <h3 class="text-2xl font-semibold text-[#003459] mb-6 text-center">핵심: 인가 코드 흐름 (Authorization Code Flow)</h3>
+                <p class="text-center text-gray-700 mb-8 max-w-2xl mx-auto">서버 측 애플리케이션에서 안전하게 토큰을 교환하는 표준적인 방법입니다.</p>
+                <ol class="space-y-4">
+                    <li class="flowchart-step p-3 rounded-md flex items-center"><span class="bg-[#00A8E8] text-white rounded-full h-6 w-6 text-xs flex items-center justify-center mr-3">1</span>CSRF 방지용 `state` 토큰 생성 및 세션 저장</li>
+                    <li class="flowchart-arrow text-2xl text-center my-1">▼</li>
+                    <li class="flowchart-step p-3 rounded-md flex items-center"><span class="bg-[#00A8E8] text-white rounded-full h-6 w-6 text-xs flex items-center justify-center mr-3">2</span>사용자를 Google 인증 엔드포인트로 리디렉션 (`/login` 라우트)</li>
+                    <li class="flowchart-arrow text-2xl text-center my-1">▼</li>
+                    <li class="flowchart-step p-3 rounded-md flex items-center"><span class="bg-[#00A8E8] text-white rounded-full h-6 w-6 text-xs flex items-center justify-center mr-3">3</span>Google 콜백 처리 (`/auth/callback` 라우트): `state` 검증, 인가 코드로 토큰 교환</li>
+                    <li class="flowchart-arrow text-2xl text-center my-1">▼</li>
+                    <li class="flowchart-step p-3 rounded-md flex items-center"><span class="bg-[#00A8E8] text-white rounded-full h-6 w-6 text-xs flex items-center justify-center mr-3">4</span>ID 토큰 검증 (서명, 발급자, 대상, 만료 시간) 및 사용자 정보 추출</li>
+                    <li class="flowchart-arrow text-2xl text-center my-1">▼</li>
+                    <li class="flowchart-step p-3 rounded-md flex items-center"><span class="bg-[#00A8E8] text-white rounded-full h-6 w-6 text-xs flex items-center justify-center mr-3">5</span>애플리케이션 사용자 인증: DB 조회, 신규 등록 또는 로그인, 자체 JWT 발급</li>
+                </ol>
+            </div>
+        </section>
+
+        <section id="database" class="py-12 sm:py-16 bg-white rounded-lg shadow-xl mb-12 p-8">
+            <h2 class="section-title text-3xl font-bold text-center mb-12">데이터베이스 사용자 정보 관리</h2>
+            <p class="text-center text-gray-700 mb-10 max-w-2xl mx-auto">Google OAuth로 인증된 사용자 정보는 애플리케이션 데이터베이스에 안전하게 저장 및 관리되어야 합니다. Google `sub` 클레임이 고유 식별자로 사용됩니다.</p>
+            
+            <h3 class="text-xl font-semibold text-[#003459] mb-4">주요 저장 필드 (예시)</h3>
+            <div class="overflow-x-auto mb-8">
+                <table class="table w-full text-sm border rounded">
+                    <thead>
+                        <tr>
+                            <th class="p-2 border">Google 클레임</th>
+                            <th class="p-2 border">DB 필드명 예시</th>
+                            <th class="p-2 border">데이터 타입</th>
+                            <th class="p-2 border">비고</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="p-2 border"><code>sub</code></td><td class="p-2 border"><code>google_id</code></td><td class="p-2 border">String</td><td class="p-2 border">기본 연결 키, 고유, 인덱싱</td></tr>
+                        <tr><td class="p-2 border"><code>email</code></td><td class="p-2 border"><code>email</code></td><td class="p-2 border">String</td><td class="p-2 border">연락용, 고유, 인덱싱</td></tr>
+                        <tr><td class="p-2 border"><code>email_verified</code></td><td class="p-2 border"><code>is_email_verified</code></td><td class="p-2 border">Boolean</td><td class="p-2 border">이메일 인증 여부</td></tr>
+                        <tr><td class="p-2 border"><code>name</code></td><td class="p-2 border"><code>full_name</code></td><td class="p-2 border">String</td><td class="p-2 border">전체 이름</td></tr>
+                        <tr><td class="p-2 border"><code>picture</code></td><td class="p-2 border"><code>profile_picture_url</code></td><td class="p-2 border">String</td><td class="p-2 border">프로필 사진 URL</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="text-xl font-semibold text-[#003459] mb-4 mt-8">비동기 ORM/ODM 선택 가이드</h3>
+             <p class="text-gray-700 mb-6">FastAPI의 비동기 특성을 활용하기 위해 비동기 호환 ORM/ODM 사용이 필수적입니다.</p>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="card p-6 rounded-lg shadow-md">
+                    <h4 class="text-lg font-semibold text-[#007EA7] mb-2">SQLAlchemy (async)</h4>
+                    <p class="text-sm text-gray-600">RDBMS (PostgreSQL, MySQL 등)를 위한 강력하고 성숙한 비동기 ORM.</p>
+                </div>
+                <div class="card p-6 rounded-lg shadow-md">
+                    <h4 class="text-lg font-semibold text-[#007EA7] mb-2">Beanie ODM</h4>
+                    <p class="text-sm text-gray-600">MongoDB를 위한 Pydantic 기반의 비동기 ODM. 직관적 사용성.</p>
+                </div>
+                <div class="card p-6 rounded-lg shadow-md">
+                    <h4 class="text-lg font-semibold text-[#007EA7] mb-2">Tortoise ORM</h4>
+                    <p class="text-sm text-gray-600">RDBMS/SQLite 대안. Django ORM과 유사한 비동기 ORM.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="security" class="py-12 sm:py-16">
+            <h2 class="section-title text-3xl font-bold text-center mb-12">고급 주제 및 보안 모범 사례</h2>
+             <p class="text-center text-gray-700 mb-10 max-w-2xl mx-auto">안전하고 확장 가능한 시스템 구축을 위한 핵심 고려 사항들입니다.</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card p-6 rounded-lg shadow-lg">
+                    <div class="flex items-center mb-3">
+                        <span class="text-3xl mr-3 text-[#00A8E8]">🔑</span>
+                        <h4 class="text-lg font-semibold text-[#007EA7]">스코프 기반 권한 관리</h4>
+                    </div>
+                    <p class="text-sm text-gray-600">FastAPI `SecurityScopes`를 사용하여 애플리케이션 자체 JWT 내 스코프로 세분화된 엔드포인트 접근 제어.</p>
+                </div>
+                <div class="card p-6 rounded-lg shadow-lg">
+                     <div class="flex items-center mb-3">
+                        <span class="text-3xl mr-3 text-[#00A8E8]">🔄</span>
+                        <h4 class="text-lg font-semibold text-[#007EA7]">접근 토큰 새로고침</h4>
+                    </div>
+                    <p class="text-sm text-gray-600">Google `refresh_token`을 사용하여 만료된 `access_token`을 안전하게 갱신 (지속적인 API 호출 시).</p>
+                </div>
+                <div class="card p-6 rounded-lg shadow-lg">
+                     <div class="flex items-center mb-3">
+                        <span class="text-3xl mr-3 text-[#00A8E8]">🚫</span>
+                        <h4 class="text-lg font-semibold text-[#007EA7]">오류 처리</h4>
+                    </div>
+                    <p class="text-sm text-gray-600">Google OAuth 오류, 토큰 검증 오류, CORS, 리디렉션 URI 불일치 등 강력한 오류 처리 로직 구축.</p>
+                </div>
+                <div class="card p-6 rounded-lg shadow-lg">
+                    <div class="flex items-center mb-3">
+                        <span class="text-3xl mr-3 text-[#00A8E8]">🔒</span>
+                        <h4 class="text-lg font-semibold text-[#007EA7]">HTTPS 필수 사용</h4>
+                    </div>
+                    <p class="text-sm text-gray-600">모든 통신 구간에서 HTTPS를 사용하여 토큰 및 코드 탈취 방지.</p>
+                </div>
+                <div class="card p-6 rounded-lg shadow-lg">
+                    <div class="flex items-center mb-3">
+                        <span class="text-3xl mr-3 text-[#00A8E8]">🤫</span>
+                        <h4 class="text-lg font-semibold text-[#007EA7]">비밀 정보 관리</h4>
+                    </div>
+                    <p class="text-sm text-gray-600">환경 변수 또는 Vault 등을 사용하여 `CLIENT_SECRET`, DB 인증 정보, JWT 키 안전하게 관리.</p>
+                </div>
+                <div class="card p-6 rounded-lg shadow-lg">
+                    <div class="flex items-center mb-3">
+                        <span class="text-3xl mr-3 text-[#00A8E8]">🛡️</span>
+                        <h4 class="text-lg font-semibold text-[#007EA7]">CSRF & XSS 방어</h4>
+                    </div>
+                    <p class="text-sm text-gray-600">OAuth `state` 파라미터 사용, HttpOnly 쿠키 (JWT 저장 시) 등 방어 메커니즘 적용.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="conclusion" class="py-12 sm:py-16 text-center bg-[#003459] text-white rounded-lg shadow-xl p-8">
+            <h2 class="text-3xl font-bold mb-6">결론: 전략적 기술 선택의 가치</h2>
+            <p class="text-lg opacity-90 mb-6 max-w-3xl mx-auto">
+                Google 로그인과 FastAPI의 성공적인 연동은 사용자에게 편리하고 안전한 인증 경험을 제공하며, 개발자에게는 강력하고 유연한 백엔드 시스템 구축 기반을 마련합니다. 본 인포그래픽에서 제시된 전략과 모범 사례를 통해 각 프로젝트의 특성에 맞는 최적의 솔루션을 구현하여 기술 경쟁력을 확보하시기 바랍니다.
+            </p>
+            <a href="#introduction" class="bg-[#00A8E8] hover:bg-[#007EA7] text-white font-semibold py-3 px-8 rounded-lg shadow-md transition-colors duration-300">처음으로 돌아가기</a>
+        </section>
+
+    </div>
+
+    <footer class="text-center py-8 text-sm text-gray-500">
+        &copy; <span id="currentYear"></span> Google & FastAPI 기술 트렌드 분석. All rights reserved.
+    </footer>
+
+    <script>
+        function wrapLabel(str, maxWidth) {
+            if (str.length <= maxWidth) return str;
+            const words = str.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+            for (let i = 1; i < words.length; i++) {
+                if (currentLine.length + words[i].length + 1 <= maxWidth) {
+                    currentLine += ' ' + words[i];
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        const implOptionsCtx = document.getElementById('implementationOptionsChart').getContext('2d');
+        new Chart(implOptionsCtx, {
+            type: 'bar',
+            data: {
+                labels: [wrapLabel('fastapi-users (라이브러리)', 16), wrapLabel('Custom (Authlib 등 직접 구현)', 16)],
+                datasets: [{
+                    label: '개발 속도',
+                    data: [90, 60],
+                    backgroundColor: '#00A8E8', // Bright Blue
+                    borderColor: '#007EA7', // Medium Blue
+                    borderWidth: 1
+                }, {
+                    label: '사용자 정의 수준',
+                    data: [65, 95],
+                    backgroundColor: '#94D2BD', // Light Teal Accent
+                    borderColor: '#007EA7', // Medium Blue
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: '#003459' } // Dark Blue for ticks
+                    },
+                    x: {
+                        ticks: { color: '#003459' } // Dark Blue for ticks
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#003459' } // Dark Blue for legend
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                if (Array.isArray(label)) {
+                                  return label.join(' ');
+                                } else {
+                                  return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Smooth scroll and active link highlighting
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('section[id]');
+
+        function changeNav() {
+            let index = sections.length;
+            while(--index && window.scrollY + 100 < sections[index].offsetTop) {} // 100 for offset
+            
+            navLinks.forEach((link) => link.classList.remove('active'));
+            if (index >= 0 && navLinks[index]) { // Check if navLinks[index] exists
+                 const activeLink = document.querySelector(`.nav-link[href="#${sections[index].id}"]`);
+                 if(activeLink) activeLink.classList.add('active');
+            }
+        }
+        changeNav(); // Initial call
+        window.addEventListener('scroll', changeNav);
+
+    </script>
+</body>
+</html>
