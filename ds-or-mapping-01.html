@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERD를 SQLAlchemy ORM으로 변환 학습</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Visualization & Content Choices:
+        - Report Info: ERD concepts, SQLAlchemy code, explanations, best practices from the source document.
+        - Goal: To provide an interactive and educational tool for understanding ERD to SQLAlchemy ORM conversion.
+        - Viz/Presentation Method: Text summaries, HTML/CSS for simple ERD representations (using divs for entities, lists for attributes, and styled borders/divs for relationships), syntax-highlighted Python code blocks (using <pre><code> and basic styling).
+        - Interaction: Tab-based navigation, collapsible sections (accordions) for details, and click-to-highlight functionality in scenarios to link ERD components (textual/HTML representations) with their corresponding SQLAlchemy code sections and display relevant explanations.
+        - Justification: This approach makes complex information more accessible and engaging by allowing users to actively explore relationships between conceptual ERD elements and concrete code implementations. It avoids passive reading and promotes understanding.
+        - Library/Method: Tailwind CSS for styling and layout. Vanilla JavaScript for all interactive functionalities (tabs, accordions, highlighting). No Chart.js or Plotly.js is needed as the content is not traditional data visualization but conceptual model transformation.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .code-block {
+            background-color: #2d2d2d; /* Dark background for code */
+            color: #f8f8f2; /* Light text for code */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Fira Code', 'Courier New', Courier, monospace; /* Monospace font for code */
+            font-size: 0.875rem; /* 14px */
+        }
+        .code-block .keyword { color: #ff79c6; } /* Pink for keywords */
+        .code-block .class-name { color: #50fa7b; } /* Green for class names */
+        .code-block .string { color: #f1fa8c; } /* Yellow for strings */
+        .code-block .comment { color: #6272a4; font-style: italic; } /* Purple/Blue for comments */
+        .code-block .number { color: #bd93f9; } /* Purple for numbers */
+        .code-block .decorator { color: #ffb86c; } /* Orange for decorators */
+        .code-block .function { color: #8be9fd; } /* Cyan for function names */
+
+        .interactive-highlight {
+            background-color: #60a5fa; /* Sky-500 */
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 0.1rem 0.2rem;
+            border-radius: 0.2rem;
+        }
+        .erd-entity {
+            border: 1px solid #9ca3af; /* Gray-400 */
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            background-color: #f9fafb; /* Gray-50 */
+        }
+        .erd-entity-title {
+            font-weight: bold;
+            color: #1f2937; /* Gray-800 */
+        }
+        .erd-attribute {
+            font-size: 0.875rem;
+            color: #374151; /* Gray-700 */
+        }
+        .explanation-box {
+            background-color: #e0f2fe; /* Sky-100 */
+            border-left: 4px solid #0ea5e9; /* Sky-500 */
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0.25rem;
+            color: #0c4a6e; /* Sky-800 */
+        }
+        .accordion-button {
+            background-color: #f3f4f6; /* Gray-100 */
+            color: #1f2937; /* Gray-800 */
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            text-align: left;
+            border: none;
+            border-bottom: 1px solid #e5e7eb; /* Gray-200 */
+            outline: none;
+            transition: background-color 0.3s ease;
+            font-weight: 500;
+        }
+        .accordion-button:hover {
+            background-color: #e5e7eb; /* Gray-200 */
+        }
+        .accordion-content {
+            padding: 1rem;
+            display: none;
+            background-color: white;
+            border-bottom: 1px solid #e5e7eb; /* Gray-200 */
+        }
+        .active-tab {
+             border-color: #0ea5e9; /* Sky-500 */
+             color: #0ea5e9; /* Sky-500 */
+             border-bottom-width: 2px;
+        }
+    </style>
+</head>
+<body class="bg-stone-100 text-neutral-800">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-2xl font-bold text-sky-700">ERD-SQLAlchemy 변환 가이드</h1>
+                <nav id="main-nav" class="flex space-x-2 sm:space-x-4 text-sm sm:text-base">
+                    </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <section id="intro" class="tab-content space-y-4">
+            <h2 class="text-2xl font-semibold text-sky-600 border-b pb-2">I. ERD 및 SQLAlchemy ORM 소개</h2>
+            <p>이 애플리케이션은 "ERD(개체-관계 다이어그램)를 SQLAlchemy ORM 코드로 변환하는 상세 연구" 보고서의 내용을 기반으로 제작되었습니다. ERD의 개념적 설계를 실제 파이썬 SQLAlchemy ORM 코드로 변환하는 과정을 체계적으로 학습할 수 있도록 돕는 것을 목표로 합니다.</p>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-neutral-700 mb-2">A. 데이터베이스 설계에서 ERD의 역할</h3>
+                <p class="text-neutral-600 leading-relaxed">ERD는 데이터베이스 내 주요 개체, 속성, 관계를 시각적으로 표현하는 개념적 청사진입니다. 특정 DBMS에 종속되지 않고 데이터의 논리적 구조를 명확히 하여, 고품질 ORM 코드 작성의 견고한 기초가 됩니다.</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-neutral-700 mb-2">B. SQLAlchemy 및 ORM 소개</h3>
+                <p class="text-neutral-600 leading-relaxed">SQLAlchemy는 파이썬을 위한 SQL 툴킷이자 ORM입니다. 객체 지향 클래스와 관계형 데이터베이스 테이블 간 매핑을 자동화하여, 개발자가 SQL 대신 파이썬 객체로 데이터를 조작하게 합니다. 생산성 향상, 데이터베이스 추상화 등의 이점을 제공합니다.</p>
+            </div>
+             <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-neutral-700 mb-2">C. "왜": 설계(ERD)와 구현(SQLAlchemy)의 연결</h3>
+                <p class="text-neutral-600 leading-relaxed">ERD를 ORM 코드로 정확히 변환하는 것은 애플리케이션 데이터 모델과 데이터베이스 구조의 일치를 보장하여 데이터 무결성과 일관성을 증진시킵니다. 이 과정은 단순한 변환을 넘어, ERD의 모호함을 발견하고 설계를 정제하는 반복적인 피드백 루프가 될 수 있습니다.</p>
+            </div>
+        </section>
+
+        <section id="core-concepts" class="tab-content space-y-4">
+            <h2 class="text-2xl font-semibold text-sky-600 border-b pb-2">II & III. 핵심 개념 및 SQLAlchemy 구성 요소</h2>
+            <p>ERD의 구성 요소가 관계형 모델로 어떻게 매핑되는지, 그리고 이를 SQLAlchemy 코드로 변환하기 위한 핵심 구성 요소들을 알아봅니다.</p>
+            
+            <div>
+                <button class="accordion-button">II. ERD에서 관계형 모델로의 매핑 규칙</button>
+                <div class="accordion-content space-y-3">
+                    <p><strong>A. 엔터티(Entities) <span class="font-mono text-sm text-sky-700">&rarr;</span> 테이블(Tables):</strong> 각 강한 엔터티는 별도의 테이블로 매핑됩니다.</p>
+                    <p><strong>B. 속성(Attributes) <span class="font-mono text-sm text-sky-700">&rarr;</span> 컬럼(Columns):</strong> 엔터티의 각 속성은 해당 테이블의 컬럼이 됩니다. 데이터 타입 매핑이 중요합니다.</p>
+                    <p><strong>C. 기본 키(Primary Keys, PKs):</strong> 엔터티의 키 속성은 테이블의 기본 키가 됩니다.</p>
+                    <p><strong>D. 외래 키(Foreign Keys, FKs) 및 관계:</strong></p>
+                    <ul class="list-disc list-inside pl-4 text-neutral-600">
+                        <li><strong>1:N 관계:</strong> "1" 쪽 엔터티의 PK가 "N" 쪽 엔터티 테이블에 FK로 추가됩니다.</li>
+                        <li><strong>M:N 관계:</strong> 관련된 두 엔터티의 PK를 참조하는 FK를 가진 새로운 연관 테이블이 생성됩니다.</li>
+                        <li><strong>1:1 관계:</strong> 1:N과 유사하게 구현하되, FK에 UNIQUE 제약 조건을 추가하거나 테이블 병합을 고려합니다.</li>
+                    </ul>
+                     <div class="overflow-x-auto bg-white p-3 rounded-md shadow">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ERD 구성 요소</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">관계형 모델 구성 요소</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">참고</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200 text-sm text-neutral-700">
+                                <tr><td class="px-4 py-2">강한 엔터티</td><td class="px-4 py-2">테이블</td><td class="px-4 py-2">엔터티 이름이 종종 테이블 이름이 됨.</td></tr>
+                                <tr><td class="px-4 py-2">속성</td><td class="px-4 py-2">엔터티 테이블의 컬럼</td><td class="px-4 py-2">데이터 타입 매핑이 중요함.</td></tr>
+                                <tr><td class="px-4 py-2">키 속성</td><td class="px-4 py-2">테이블의 기본 키</td><td class="px-4 py-2">단일 또는 복합 키가 될 수 있음.</td></tr>
+                                <tr><td class="px-4 py-2">1:N 관계</td><td class="px-4 py-2">"N" 쪽 테이블의 외래 키</td><td class="px-4 py-2">"1" 쪽의 기본 키 참조.</td></tr>
+                                <tr><td class="px-4 py-2">M:N 관계</td><td class="px-4 py-2">새로운 연관 테이블 (FK 포함)</td><td class="px-4 py-2">연관 테이블의 PK는 종종 두 FK의 복합 키임.</td></tr>
+                                <tr><td class="px-4 py-2">1:1 관계</td><td class="px-4 py-2">한 테이블의 외래 키</td><td class="px-4 py-2">UNIQUE 제약 조건 또는 테이블 병합 고려.</td></tr>
+                                <tr><td class="px-4 py-2">약한 엔터티</td><td class="px-4 py-2">복합 PK를 가진 테이블</td><td class="px-4 py-2">강한 엔터티의 PK + 부분 키. 식별 관계가 FK가 됨.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <button class="accordion-button">III. ERD 변환을 위한 SQLAlchemy ORM 핵심 구성 요소</button>
+                <div class="accordion-content space-y-3">
+                    <p><strong>A. SQLAlchemy 환경 설정:</strong></p>
+                    <ul class="list-disc list-inside pl-4 text-neutral-600">
+                        <li><strong>엔진(Engine):</strong> 데이터베이스 연결 관리. `create_engine()`.</li>
+                        <li><strong>선언적 베이스(Declarative Base):</strong> 매핑된 ORM 클래스의 기본 클래스. `class Base(DeclarativeBase): pass`.</li>
+                        <li><strong>세션(Session):</strong> DB 상호작용 인터페이스. `sessionmaker()`.</li>
+                        <li><strong>메타데이터(MetaData):</strong> 스키마 정보 저장 컬렉션.</li>
+                    </ul>
+                    <p><strong>B. 매핑된 클래스 정의 (엔터티 표현):</strong> ERD 엔터티는 `Base`를 상속하는 파이썬 클래스로 변환됩니다. `__tablename__`으로 테이블명 지정.</p>
+                    <p><strong>C. 컬럼 정의 (속성 표현):</strong> `mapped_column()` (최신) 또는 `Column`으로 속성 정의. 데이터 타입, PK(`primary_key=True`), 제약 조건(`nullable`, `unique`) 지정.</p>
+                    <p><strong>D. 외래 키 제약 조건 정의:</strong> `ForeignKey("tablename.columnname")` 객체로 정의.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="relationship-mapping" class="tab-content space-y-4">
+            <h2 class="text-2xl font-semibold text-sky-600 border-b pb-2">IV. ERD 관계를 SQLAlchemy `relationship()`으로 변환</h2>
+            <p>ERD의 관계는 SQLAlchemy의 `relationship()` 구문을 사용하여 객체 지향적으로 표현됩니다. 이는 외래 키를 기반으로 관련 객체 간의 탐색을 가능하게 합니다.</p>
+            
+            <div>
+                <button class="accordion-button">A. `relationship()` 구문: 목적 및 주요 인수</button>
+                <div class="accordion-content space-y-3">
+                    <p>`relationship()`은 매핑된 클래스 간의 객체 지향적 관계를 정의합니다.</p>
+                    <p class="font-semibold">주요 인수:</p>
+                    <ul class="list-disc list-inside pl-4 text-neutral-600">
+                        <li>`argument`: 관련 모델 클래스 이름 (문자열 가능).</li>
+                        <li>`back_populates`: 양방향 관계에서 상호 보완적 속성 이름 지정 (권장).</li>
+                        <li>`secondary`: 다대다 관계에서 연관 테이블 지정.</li>
+                        <li>`uselist=False`: 일대일 관계에서 단일 객체 참조 명시.</li>
+                        <li>`cascade`: 부모 객체 작업이 자식 객체에 미치는 영향 정의.</li>
+                        <li>`lazy`: 관련 객체 로딩 방식 제어.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div>
+                <button class="accordion-button">B. 일대다 관계 (예: User <span class="font-mono text-sm text-sky-700">&rarr;</span> Posts)</button>
+                <div class="accordion-content space-y-3">
+                    <p class="text-neutral-600">ERD: `User` (1) --- (N) `Post`.</p>
+                    <p class="font-semibold">SQLAlchemy 구현:</p>
+                    <ul class="list-disc list-inside pl-4 text-neutral-600">
+                        <li>`Post` 모델: `user_id = mapped_column(ForeignKey("users.id"))`.</li>
+                        <li>`User` 모델: `posts = relationship("Post", back_populates="user")`. (컬렉션)</li>
+                        <li>`Post` 모델: `user = relationship("User", back_populates="posts")`. (단일 객체)</li>
+                    </ul>
+                    <p class="text-sm text-neutral-500">외래 키는 항상 "다(many)" 쪽에 위치합니다.</p>
+                </div>
+            </div>
+
+            <div>
+                <button class="accordion-button">C. 다대다 관계 (예: Articles <span class="font-mono text-sm text-sky-700">&harr;</span> Tags)</button>
+                <div class="accordion-content space-y-3">
+                    <p class="text-neutral-600">ERD: `Article` (M) --- (N) `Tag`. 중간에 연관 테이블 필요.</p>
+                    <p class="font-semibold">SQLAlchemy 구현 (연관 테이블 패턴):</p>
+                    <ol class="list-decimal list-inside pl-4 text-neutral-600">
+                        <li>`Article`, `Tag` 클래스 및 연관 테이블/모델(예: `article_tags_table`) 정의.</li>
+                        <li>연관 테이블: `article_id` (FK to `articles.id`), `tag_id` (FK to `tags.id`).</li>
+                        <li>`Article` 모델: `tags = relationship("Tag", secondary=article_tags_table, back_populates="articles")`.</li>
+                        <li>`Tag` 모델: `articles = relationship("Article", secondary=article_tags_table, back_populates="tags")`.</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div>
+                <button class="accordion-button">D. 일대일 관계 (예: User <span class="font-mono text-sm text-sky-700">&harr;</span> UserProfile)</button>
+                <div class="accordion-content space-y-3">
+                    <p class="text-neutral-600">ERD: `User` (1) --- (1) `UserProfile`.</p>
+                    <p class="font-semibold">SQLAlchemy 구현:</p>
+                    <ul class="list-disc list-inside pl-4 text-neutral-600">
+                        <li>`UserProfile` 모델: `user_id = mapped_column(ForeignKey("users.id"), unique=True)`. (`unique=True`가 중요)</li>
+                        <li>`User` 모델: `profile = relationship("UserProfile", back_populates="user", uselist=False)`. (`uselist=False`가 중요)</li>
+                        <li>`UserProfile` 모델: `user = relationship("User", back_populates="profile")`.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="conversion-scenarios" class="tab-content space-y-6">
+            <h2 class="text-2xl font-semibold text-sky-600 border-b pb-2">V. 상세 변환 시나리오 및 코드 예제</h2>
+            <p>실제 시나리오를 통해 ERD를 SQLAlchemy 코드로 변환하는 구체적인 예제를 살펴봅니다. ERD 요소 또는 코드 일부를 클릭하여 상호 연결된 부분을 확인하고 설명을 볼 수 있습니다.</p>
+            
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-neutral-700 mb-3">시나리오 1: 대학 수강 신청 시스템</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="text-lg font-medium text-neutral-600 mb-2">ERD 개념</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="erd-entity">
+                                <div class="erd-entity-title">엔터티: <span class="interactive-highlight" data-scenario="uni" data-target="student-entity">Student</span></div>
+                                <ul class="list-disc list-inside pl-4 erd-attribute">
+                                    <li><span class="interactive-highlight" data-scenario="uni" data-target="student-id">StudentID (PK)</span></li>
+                                    <li><span class="interactive-highlight" data-scenario="uni" data-target="student-name">Name</span></li>
+                                    <li><span class="interactive-highlight" data-scenario="uni" data-target="student-email">Email</span></li>
+                                </ul>
+                            </div>
+                            <div class="erd-entity">
+                                <div class="erd-entity-title">엔터티: <span class="interactive-highlight" data-scenario="uni" data-target="course-entity">Course</span></div>
+                                <ul class="list-disc list-inside pl-4 erd-attribute">
+                                    <li><span class="interactive-highlight" data-scenario="uni" data-target="course-id">CourseID (PK)</span></li>
+                                    <li><span class="interactive-highlight" data-scenario="uni" data-target="course-title">Title</span></li>
+                                    <li><span class="interactive-highlight" data-scenario="uni" data-target="course-credits">Credits</span></li>
+                                </ul>
+                            </div>
+                             <div class="erd-entity">
+                                <div class="erd-entity-title">연관 엔터티 (M:N 관계): <span class="interactive-highlight" data-scenario="uni" data-target="enrollment-entity">Enrollment</span></div>
+                                <p class="text-xs text-neutral-500 pl-4">Student (M) <span class="font-mono text-sky-700">&harr;</span> (N) Course</p>
+                                <ul class="list-disc list-inside pl-4 erd-attribute">
+                                    <li><span class="interactive-highlight" data-scenario="uni" data-target="enrollment-student-fk">StudentID (FK, PK part)</span></li>
+                                    <li><span class="interactive-highlight" data-scenario="uni" data-target="enrollment-course-fk">CourseID (FK, PK part)</span></li>
+                                    <li><span class="interactive-highlight" data-scenario="uni" data-target="enrollment-grade">Grade</span> (관계 속성)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-medium text-neutral-600 mb-2">SQLAlchemy ORM 코드</h4>
+                        <pre class="code-block scenario-uni-code"><code id="scenario-uni-code-content">
+<span class="keyword">from</span> sqlalchemy <span class="keyword">import</span> create_engine, Column, Integer, String, ForeignKey, Table
+<span class="keyword">from</span> sqlalchemy.orm <span class="keyword">import</span> relationship, sessionmaker, DeclarativeBase, Mapped, mapped_column
+<span class="keyword">from</span> typing <span class="keyword">import</span> List, Optional
+
+<span class="keyword">class</span> <span class="class-name">Base</span>(DeclarativeBase):
+    <span class="keyword">pass</span>
+
+<span class="keyword">class</span> <span class="class-name interactive-highlight" data-scenario="uni" data-id="student-entity">Student</span>(Base):
+    __tablename__ = <span class="string">"students"</span>
+    <span class="interactive-highlight" data-scenario="uni" data-id="student-id">id</span>: Mapped[<span class="class-name">int</span>] = mapped_column(Integer, primary_key=<span class="keyword">True</span>, name=<span class="string">"student_id"</span>)
+    <span class="interactive-highlight" data-scenario="uni" data-id="student-name">name</span>: Mapped[<span class="class-name">str</span>] = mapped_column(String(<span class="number">100</span>), nullable=<span class="keyword">False</span>)
+    <span class="interactive-highlight" data-scenario="uni" data-id="student-email">email</span>: Mapped[<span class="class-name">str</span>] = mapped_column(String(<span class="number">100</span>), unique=<span class="keyword">True</span>)
+
+    enrollments: Mapped[List[<span class="string">"Enrollment"</span>]] = relationship(back_populates=<span class="string">"student"</span>)
+
+<span class="keyword">class</span> <span class="class-name interactive-highlight" data-scenario="uni" data-id="course-entity">Course</span>(Base):
+    __tablename__ = <span class="string">"courses"</span>
+    <span class="interactive-highlight" data-scenario="uni" data-id="course-id">id</span>: Mapped[<span class="class-name">int</span>] = mapped_column(Integer, primary_key=<span class="keyword">True</span>, name=<span class="string">"course_id"</span>)
+    <span class="interactive-highlight" data-scenario="uni" data-id="course-title">title</span>: Mapped[<span class="class-name">str</span>] = mapped_column(String(<span class="number">100</span>), nullable=<span class="keyword">False</span>)
+    <span class="interactive-highlight" data-scenario="uni" data-id="course-credits">credits</span>: Mapped[<span class="class-name">int</span>] = mapped_column(Integer, nullable=<span class="keyword">False</span>)
+
+    enrollments: Mapped[List[<span class="string">"Enrollment"</span>]] = relationship(back_populates=<span class="string">"course"</span>)
+
+<span class="keyword">class</span> <span class="class-name interactive-highlight" data-scenario="uni" data-id="enrollment-entity">Enrollment</span>(Base): <span class="comment"># 연관 객체 (Association Object)</span>
+    __tablename__ = <span class="string">"enrollments"</span>
+    <span class="interactive-highlight" data-scenario="uni" data-id="enrollment-student-fk">student_id</span>: Mapped[<span class="class-name">int</span>] = mapped_column(ForeignKey(<span class="string">"students.student_id"</span>), primary_key=<span class="keyword">True</span>)
+    <span class="interactive-highlight" data-scenario="uni" data-id="enrollment-course-fk">course_id</span>: Mapped[<span class="class-name">int</span>] = mapped_column(ForeignKey(<span class="string">"courses.course_id"</span>), primary_key=<span class="keyword">True</span>)
+    <span class="interactive-highlight" data-scenario="uni" data-id="enrollment-grade">grade</span>: Mapped[Optional[<span class="class-name">str</span>]] = mapped_column(String(<span class="number">2</span>))
+
+    student: Mapped[<span class="string">"Student"</span>] = relationship(back_populates=<span class="string">"enrollments"</span>)
+    course: Mapped[<span class="string">"Course"</span>] = relationship(back_populates=<span class="string">"enrollments"</span>)
+                        </code></pre>
+                    </div>
+                </div>
+                <div id="explanation-uni" class="explanation-box mt-4" style="display: none;"></div>
+                <button class="accordion-button mt-3">시나리오 1 변환 설명 보기</button>
+                <div class="accordion-content">
+                    <ul class="list-disc list-inside text-neutral-600 text-sm space-y-1">
+                        <li>`Student` 및 `Course` 엔터티는 각각 `Student` 및 `Course` SQLAlchemy 클래스로 매핑됩니다.</li>
+                        <li>`Enrollment`는 `Student`와 `Course` 간의 M:N 관계를 나타내는 연관 엔터티이며, 추가 속성(`grade`)을 가집니다. 이는 `Enrollment`라는 별도의 SQLAlchemy 클래스(연관 객체)로 매핑됩니다.</li>
+                        <li>`Enrollment` 클래스는 `students.student_id`와 `courses.course_id`를 참조하는 두 개의 외래 키를 가지며, 이 두 외래 키는 `Enrollment` 테이블의 복합 기본 키를 구성합니다.</li>
+                        <li>`Student`와 `Course` 클래스는 각각 `enrollments`라는 `relationship`을 통해 자신이 참여하는 `Enrollment` 객체 목록에 접근할 수 있습니다.</li>
+                        <li>`Enrollment` 클래스는 `student` 및 `course`라는 `relationship`을 통해 연결된 객체에 접근합니다.</li>
+                        <li>`back_populates` 인수는 관계들의 양방향성을 올바르게 설정합니다. 이는 "연관 객체(Association Object)" 패턴입니다.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-neutral-700 mb-3">시나리오 2: 전자상거래 플랫폼</h3>
+                 <p class="text-sm text-neutral-500 mb-2">이 시나리오는 `Customer` (1) <span class="font-mono text-sky-700">&rarr;</span> (N) `Order` 및 `Order` (M) <span class="font-mono text-sky-700">&harr;</span> (N) `Product` (중간에 `OrderItem` 연관 객체) 관계를 다룹니다. 자세한 코드는 보고서 원문을 참조하거나 아래 '변환 설명 보기'를 통해 핵심 개념을 확인하세요.</p>
+                <button class="accordion-button mt-3">시나리오 2 변환 설명 보기</button>
+                <div class="accordion-content">
+                    <p class="font-semibold">ERD 개념 요약:</p>
+                    <ul class="list-disc list-inside text-neutral-600 text-sm space-y-1 mb-2">
+                        <li>엔터티: `Customer`, `Order`, `Product`, `OrderItem` (연관 객체)</li>
+                        <li>관계: `Customer` 1:N `Order`, `Order` M:N `Product` (`OrderItem`을 통해)</li>
+                    </ul>
+                     <p class="font-semibold">SQLAlchemy 변환 핵심:</p>
+                    <ul class="list-disc list-inside text-neutral-600 text-sm space-y-1">
+                        <li>`Customer`, `Order`, `Product` 엔터티는 각각 SQLAlchemy 클래스로 매핑됩니다.</li>
+                        <li>`Customer`와 `Order` 간 1:N 관계: `Order` 클래스에 `customer_id` FK. `Customer`에는 `orders` 컬렉션 관계, `Order`에는 `customer` 단일 객체 관계.</li>
+                        <li>`Order`와 `Product` 간 M:N 관계: `OrderItem` 연관 객체로 구현. `OrderItem`은 `Order`와 `Product` FK 및 추가 속성(`quantity`, `unit_price`) 포함.</li>
+                        <li>`Order.items` 관계에 `cascade="all, delete-orphan"` 설정 가능 (주문 삭제 시 주문 항목 자동 삭제).</li>
+                    </ul>
+                    <div class="mt-3">
+                        <h4 class="text-md font-medium text-neutral-600 mb-1">대표 코드 스니펫 (`OrderItem`):</h4>
+                        <pre class="code-block"><code id="scenario-ecommerce-code-content-brief">
+<span class="keyword">class</span> <span class="class-name">OrderItem</span>(Base): <span class="comment"># 연관 객체</span>
+    __tablename__ = <span class="string">"order_items"</span>
+    order_id: Mapped[<span class="class-name">int</span>] = mapped_column(ForeignKey(<span class="string">"orders.order_id"</span>), primary_key=<span class="keyword">True</span>)
+    product_id: Mapped[<span class="class-name">int</span>] = mapped_column(ForeignKey(<span class="string">"products.product_id"</span>), primary_key=<span class="keyword">True</span>)
+    quantity: Mapped[<span class="class-name">int</span>] = mapped_column(Integer, nullable=<span class="keyword">False</span>)
+    unit_price: Mapped[Numeric] = mapped_column(Numeric(<span class="number">10</span>, <span class="number">2</span>), nullable=<span class="keyword">False</span>)
+
+    order: Mapped[<span class="string">"Order"</span>] = relationship(back_populates=<span class="string">"items"</span>)
+    product: Mapped[<span class="string">"Product"</span>] = relationship(back_populates=<span class="string">"order_items"</span>)
+                        </code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-neutral-700 mb-3">시나리오 3: 블로깅 플랫폼</h3>
+                <p class="text-sm text-neutral-500 mb-2">이 시나리오는 `User` (1) <span class="font-mono text-sky-700">&harr;</span> (1) `UserProfile`, `User` (1) <span class="font-mono text-sky-700">&rarr;</span> (N) `Post`, `Post` (M) <span class="font-mono text-sky-700">&harr;</span> (N) `Tag` (중간에 `PostTag` 연관 테이블) 관계를 다룹니다. 자세한 코드는 보고서 원문을 참조하거나 아래 '변환 설명 보기'를 통해 핵심 개념을 확인하세요.</p>
+                <button class="accordion-button mt-3">시나리오 3 변환 설명 보기</button>
+                <div class="accordion-content">
+                     <p class="font-semibold">ERD 개념 요약:</p>
+                    <ul class="list-disc list-inside text-neutral-600 text-sm space-y-1 mb-2">
+                        <li>엔터티: `User`, `UserProfile`, `Post`, `Tag`, `PostTag` (연관 테이블)</li>
+                        <li>관계: `User` 1:1 `UserProfile`, `User` 1:N `Post`, `Post` M:N `Tag`</li>
+                    </ul>
+                     <p class="font-semibold">SQLAlchemy 변환 핵심:</p>
+                    <ul class="list-disc list-inside text-neutral-600 text-sm space-y-1">
+                        <li>`User`, `UserProfile`, `Post`, `Tag` 엔터티는 각각 SQLAlchemy 클래스로 매핑.</li>
+                        <li>`User` 1:1 `UserProfile`: `UserProfile`에 `user_id` FK (`unique=True`). `User.profile` 관계에 `uselist=False`.</li>
+                        <li>`User` 1:N `Post`: `Post`에 `user_id` FK. 양쪽에 `relationship` 정의.</li>
+                        <li>`Post` M:N `Tag`: `post_tag_association_table` (`Table` 객체) 정의. `Post` 및 `Tag` 클래스의 `relationship`에 `secondary` 인수로 지정.</li>
+                    </ul>
+                     <div class="mt-3">
+                        <h4 class="text-md font-medium text-neutral-600 mb-1">대표 코드 스니펫 (`post_tag_association_table` 및 `Post.tags`):</h4>
+                        <pre class="code-block"><code id="scenario-blog-code-content-brief">
+<span class="comment"># Post와 Tag 간의 다대다 관계를 위한 연관 테이블</span>
+post_tag_association_table = Table(
+    <span class="string">"post_tag_association"</span>,
+    Base.metadata,
+    Column(<span class="string">"post_id"</span>, ForeignKey(<span class="string">"posts.post_id"</span>), primary_key=<span class="keyword">True</span>),
+    Column(<span class="string">"tag_id"</span>, ForeignKey(<span class="string">"tags.tag_id"</span>), primary_key=<span class="keyword">True</span>),
+)
+
+<span class="keyword">class</span> <span class="class-name">Post</span>(Base):
+    <span class="comment"># ... other columns ...</span>
+    tags: Mapped[List[<span class="string">"Tag"</span>]] = relationship(
+        secondary=post_tag_association_table, 
+        back_populates=<span class="string">"posts"</span>
+    )
+                        </code></pre>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <section id="advanced-mapping" class="tab-content space-y-4">
+            <h2 class="text-2xl font-semibold text-sky-600 border-b pb-2">VI. 고급 ERD 구성 요소 매핑</h2>
+            <p>약한 엔터티, 상속 관계, 복합/다중값 속성 등 더 복잡한 ERD 구조를 SQLAlchemy로 매핑하는 방법을 알아봅니다.</p>
+            <div>
+                <button class="accordion-button">A. 약한 엔터티(Weak Entities)</button>
+                <div class="accordion-content">
+                    <p class="text-neutral-600">자체적으로 고유 식별이 어렵고 강한 엔터티에 의존. 강한 엔터티 PK를 자신의 복합 PK 일부로 포함 (동시에 FK 역할).</p>
+                    <p class="text-neutral-600 mt-1"><strong>SQLAlchemy:</strong> 복합 PK 정의, PK 일부가 `ForeignKey`. 강한 엔터티 관계에 `cascade="all, delete-orphan"` 자주 사용.</p>
+                </div>
+            </div>
+            <div>
+                <button class="accordion-button">B. 일반화/특수화 (상속)</button>
+                <div class="accordion-content">
+                    <p class="text-neutral-600">"is-a" 관계 (예: 관리자는 직원이다). SQLAlchemy 상속 전략:</p>
+                    <ul class="list-disc list-inside pl-4 text-neutral-600">
+                        <li><strong>조인된 테이블 상속:</strong> 기본/하위 클래스 각자 테이블, FK로 연결. 정규화.</li>
+                        <li><strong>단일 테이블 상속:</strong> 모든 클래스가 단일 테이블에 매핑. 쿼리 단순, NULL 컬럼 많을 수 있음.</li>
+                        <li><strong>구체적 테이블 상속:</strong> 각 클래스가 모든 속성을 가진 완전한 테이블. 다형적 쿼리 복잡.</li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <button class="accordion-button">C. 복합 속성(Composite Attributes)</button>
+                <div class="accordion-content">
+                    <p class="text-neutral-600">여러 하위 속성으로 구성 (예: 주소 <span class="font-mono text-sm text-sky-700">&rarr;</span> Street, City, ZipCode).</p>
+                    <p class="text-neutral-600 mt-1"><strong>SQLAlchemy 옵션:</strong></p>
+                    <ul class="list-disc list-inside pl-4 text-neutral-600">
+                        <li><strong>평탄화:</strong> 주 엔터티 테이블에 개별 컬럼으로 매핑.</li>
+                        <li><strong>별도 클래스/테이블:</strong> 복잡하거나 재사용 시 별도 엔터티로 모델링 후 관계로 연결.</li>
+                        <li><strong>SQLAlchemy 복합 타입:</strong> `composite()` 사용 (값 객체에 적합).</li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <button class="accordion-button">D. 다중값 속성(Multivalued Attributes)</button>
+                <div class="accordion-content">
+                    <p class="text-neutral-600">단일 엔터티 인스턴스에 여러 값을 가짐 (예: 학생의 전화번호들).</p>
+                    <p class="text-neutral-600 mt-1"><strong>SQLAlchemy:</strong> 새 테이블/클래스 생성, 주 엔터티에 대한 FK 및 1:N `relationship` 설정.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="best-practices" class="tab-content space-y-4">
+            <h2 class="text-2xl font-semibold text-sky-600 border-b pb-2">VII. 모범 사례 및 고려 사항</h2>
+             <p>성공적인 변환과 유지보수 가능한 애플리케이션 구축을 위한 주요 고려 사항입니다.</p>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="font-semibold text-neutral-700">A. 명명 규칙</h3>
+                    <p class="text-sm text-neutral-600">테이블: 복수형 (users), 클래스: 단수형 CamelCase (User), 컬럼: snake_case (user_id).</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="font-semibold text-neutral-700">B. 적절한 데이터 타입 선택</h3>
+                    <p class="text-sm text-neutral-600">ERD 속성 타입을 SQLAlchemy/SQL 타입으로 신중히 매핑. 저장 공간, 성능, 데이터 무결성 고려.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="font-semibold text-neutral-700">C. 연쇄 동작(Cascade) 이해</h3>
+                    <p class="text-sm text-neutral-600">DB 수준 (`ForeignKey(ondelete="CASCADE")`)과 ORM 수준 (`relationship(cascade="...")`) 연쇄 동작 신중히 결정.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="font-semibold text-neutral-700">D. 로딩 전략 (Lazy vs Eager)</h3>
+                    <p class="text-sm text-neutral-600">기본은 지연 로딩. N+1 문제 방지 위해 즉시 로딩 (`joinedload`, `selectinload`) 고려.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="font-semibold text-neutral-700">E. 자동 매핑 도구 (참고)</h3>
+                    <p class="text-sm text-neutral-600">`automap`, `sqlacodegen` 등은 기존 DB에서 모델 생성 가능. 학습/검증에 활용.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="conclusion" class="tab-content space-y-4">
+            <h2 class="text-2xl font-semibold text-sky-600 border-b pb-2">VIII. 결론</h2>
+            <div class="bg-white p-6 rounded-lg shadow">
+            <p class="text-neutral-600 leading-relaxed">본 연구 및 이 애플리케이션은 ERD 구성 요소를 SQLAlchemy ORM으로 체계적으로 변환하는 과정을 안내합니다. 이 과정은 개념적 설계를 견고하고 유지보수 가능하며 효율적인 객체 지향 데이터 접근 계층으로 구체화하는 데 중요합니다.</p>
+            <p class="text-neutral-600 leading-relaxed mt-3">잘 정렬된 데이터 모델은 애플리케이션 논리와 DB 구조 간 일관성을 확보하고, SQLAlchemy ORM은 개발 생산성을 향상시킵니다. 성공적인 변환은 ERD 원칙과 SQLAlchemy 기능 및 모범 사례에 대한 깊은 이해를 필요로 하며, 데이터 중심 애플리케이션의 견고한 기반을 마련하는 데 기여할 것입니다.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-8 text-sm text-neutral-500 border-t border-stone-200 mt-12">
+        ERD to SQLAlchemy ORM Interactive Guide &copy; 2025
+    </footer>
+
+    <script>
+        const tabs = [
+            { id: 'intro', title: '소개' },
+            { id: 'core-concepts', title: '핵심 개념' },
+            { id: 'relationship-mapping', title: '관계 매핑' },
+            { id: 'conversion-scenarios', title: '변환 시나리오' },
+            { id: 'advanced-mapping', title: '고급 매핑' },
+            { id: 'best-practices', title: '모범 사례' },
+            { id: 'conclusion', title: '결론' }
+        ];
+
+        const navContainer = document.getElementById('main-nav');
+        
+        tabs.forEach(tab => {
+            const tabButton = document.createElement('button');
+            tabButton.classList.add('px-2', 'py-2', 'sm:px-3', 'sm:py-2', 'font-medium', 'text-neutral-500', 'hover:text-sky-600', 'focus:outline-none', 'border-b-2', 'border-transparent');
+            tabButton.textContent = tab.title;
+            tabButton.dataset.tab = tab.id;
+            navContainer.appendChild(tabButton);
+        });
+
+        const tabButtons = navContainer.querySelectorAll('button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        function showTab(tabId) {
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === tabId) {
+                    content.classList.add('active');
+                }
+            });
+            tabButtons.forEach(button => {
+                button.classList.remove('active-tab');
+                if (button.dataset.tab === tabId) {
+                    button.classList.add('active-tab');
+                }
+            });
+            // Store active tab in localStorage
+            if (window.localStorage) {
+                localStorage.setItem('activeERD SQLAlchemyTab', tabId);
+            }
+        }
+
+        navContainer.addEventListener('click', (event) => {
+            if (event.target.tagName === 'BUTTON') {
+                const tabId = event.target.dataset.tab;
+                showTab(tabId);
+            }
+        });
+
+        // Accordion functionality
+        const accordionButtons = document.querySelectorAll('.accordion-button');
+        accordionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                button.classList.toggle('active');
+                if (content.style.display === "block") {
+                    content.style.display = "none";
+                } else {
+                    content.style.display = "block";
+                }
+            });
+        });
+
+        // Interactive highlighting for scenarios
+        const interactiveElements = document.querySelectorAll('.interactive-highlight');
+        let currentScenarioHighlights = { scenario: null, targets: [] };
+
+        interactiveElements.forEach(el => {
+            el.addEventListener('click', () => {
+                const scenario = el.dataset.scenario;
+                const targetId = el.dataset.target;
+                const codeId = el.dataset.id;
+                
+                // Clear previous highlights within the same scenario or if scenario changes
+                if (currentScenarioHighlights.scenario !== scenario) {
+                    clearAllHighlights();
+                    currentScenarioHighlights.scenario = scenario;
+                    currentScenarioHighlights.targets = [];
+                } else {
+                     // Clear only highlights related to the current scenario but different target group
+                    const currentGroup = targetId || codeId;
+                    if (!currentScenarioHighlights.targets.includes(currentGroup)) {
+                         currentScenarioHighlights.targets.forEach(highlightTarget => {
+                            document.querySelectorAll(`[data-scenario="${scenario}"][data-target="${highlightTarget}"], [data-scenario="${scenario}"][data-id="${highlightTarget}"]`)
+                                .forEach(prevEl => prevEl.style.backgroundColor = '');
+                         });
+                         currentScenarioHighlights.targets = [];
+                    }
+                }
+
+
+                let relatedCodeElements = [];
+                let relatedErds = [];
+
+                if (targetId) { // Clicked on ERD element
+                    el.style.backgroundColor = '#38bdf8'; // Light blue
+                    relatedCodeElements = document.querySelectorAll(`[data-scenario="${scenario}"][data-id="${targetId}"]`);
+                    currentScenarioHighlights.targets.push(targetId);
+                } else if (codeId) { // Clicked on Code element
+                    el.style.backgroundColor = '#38bdf8';
+                    relatedErds = document.querySelectorAll(`[data-scenario="${scenario}"][data-target="${codeId}"]`);
+                    currentScenarioHighlights.targets.push(codeId);
+                }
+                
+                relatedCodeElements.forEach(codeEl => codeEl.style.backgroundColor = '#38bdf8');
+                relatedErds.forEach(erdEl => erdEl.style.backgroundColor = '#38bdf8');
+
+                // Display explanation
+                const explanationBox = document.getElementById(`explanation-${scenario}`);
+                if (explanationBox) {
+                    let explanationText = "";
+                    if (targetId === 'student-entity' || codeId === 'student-entity') explanationText = "Student 엔터티는 Student 클래스로 매핑됩니다.";
+                    else if (targetId === 'student-id' || codeId === 'student-id') explanationText = "Student의 PK인 StudentID는 Student 클래스의 id 컬럼(primary_key=True)으로 매핑됩니다.";
+                    else if (targetId === 'student-name' || codeId === 'student-name') explanationText = "Student의 Name 속성은 Student 클래스의 name 컬럼으로 매핑됩니다.";
+                    else if (targetId === 'course-entity' || codeId === 'course-entity') explanationText = "Course 엔터티는 Course 클래스로 매핑됩니다.";
+                    else if (targetId === 'enrollment-entity' || codeId === 'enrollment-entity') explanationText = "Enrollment 연관 엔터티는 Enrollment 클래스(연관 객체)로 매핑됩니다.";
+                    else if (targetId === 'enrollment-student-fk' || codeId === 'enrollment-student-fk') explanationText = "Enrollment의 StudentID FK는 Enrollment 클래스의 student_id 컬럼(ForeignKey)으로 매핑되며 복합 PK의 일부입니다.";
+                    else if (targetId && targetId.includes('fk')) explanationText = "외래 키 관계입니다.";
+                    else if (targetId && targetId.includes('entity')) explanationText = "엔터티-클래스 매핑입니다.";
+                     else if (targetId && (targetId.includes('-name') || targetId.includes('-title') || targetId.includes('-email') || targetId.includes('-credits') || targetId.includes('-grade'))) explanationText = "속성-컬럼 매핑입니다.";
+
+
+                    if (explanationText) {
+                         explanationBox.textContent = explanationText;
+                         explanationBox.style.display = 'block';
+                    } else {
+                         explanationBox.style.display = 'none';
+                    }
+                }
+            });
+        });
+
+        function clearAllHighlights() {
+            interactiveElements.forEach(el => el.style.backgroundColor = '');
+            document.querySelectorAll('.explanation-box').forEach(box => {
+                box.style.display = 'none';
+                box.textContent = '';
+            });
+            currentScenarioHighlights = { scenario: null, targets: [] };
+        }
+        
+        // Initialize: show the first tab or the one stored in localStorage
+        let activeTab = 'intro';
+        if (window.localStorage) {
+            const storedTab = localStorage.getItem('activeERD SQLAlchemyTab');
+            if (storedTab && tabs.find(t => t.id === storedTab)) {
+                activeTab = storedTab;
+            }
+        }
+        showTab(activeTab);
+
+    </script>
+</body>
+</html>
