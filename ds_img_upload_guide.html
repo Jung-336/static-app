@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대화형 FastAPI + Supabase 이미지 업로드 가이드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #F8F7F4;
+            color: #3D3D3D;
+        }
+        .content-card {
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        .nav-button {
+            background-color: #ECEBE8;
+            color: #5A5A5A;
+            transition: all 0.2s ease;
+        }
+        .nav-button.active, .nav-button:hover {
+            background-color: #A3B8A3;
+            color: #FFFFFF;
+        }
+        .code-block {
+            background-color: #282c34;
+            color: #abb2bf;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'D2Coding', 'Consolas', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .flow-step {
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .flow-step:hover, .flow-step.active-step {
+            border-color: #A3B8A3;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .arrow {
+            font-size: 2rem;
+            color: #A3B8A3;
+        }
+        #detail-view {
+            transition: opacity 0.5s ease-in-out;
+        }
+        .hidden-section {
+            display: none;
+        }
+        .interactive-select {
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            width: 100%;
+            transition: border-color 0.2s ease;
+        }
+        .interactive-select:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            border-color: #A3B8A3;
+            box-shadow: 0 0 0 2px rgba(163, 184, 163, 0.5);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold mb-2">FastAPI & Supabase</h1>
+            <p class="text-xl text-gray-600">대화형 이미지 업로드 가이드</p>
+        </header>
+
+        <main>
+            <nav class="flex justify-center space-x-2 md:space-x-4 mb-12">
+                <button data-target="flow" class="nav-button font-semibold py-2 px-4 rounded-full active">🚀 업로드 흐름</button>
+                <button data-target="config" class="nav-button font-semibold py-2 px-4 rounded-full">⚙️ 환경 설정</button>
+                <button data-target="code" class="nav-button font-semibold py-2 px-4 rounded-full">💻 코드 탐색기</button>
+                <button data-target="errors" class="nav-button font-semibold py-2 px-4 rounded-full">🚨 오류 핸들링</button>
+            </nav>
+            
+            <div id="app-content">
+
+                <section id="flow-section">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold mb-2">업로드 프로세스 시각화</h2>
+                        <p class="text-gray-600 max-w-3xl mx-auto">전체 이미지 업로드 과정을 단계별로 나타낸 다이어그램입니다. 각 단계를 클릭하여 상세한 설명과 주요 포인트를 확인하세요.</p>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 mb-8">
+                        <div id="step-client" data-step="client" class="flow-step content-card p-4 text-center w-48">
+                            <div class="text-4xl">📱</div>
+                            <h3 class="font-bold mt-2">클라이언트</h3>
+                            <p class="text-sm text-gray-500">이미지 전송</p>
+                        </div>
+                        <div class="arrow hidden md:block">→</div>
+                        <div id="step-fastapi" data-step="fastapi" class="flow-step content-card p-4 text-center w-48">
+                           <div class="text-4xl">⚡️</div>
+                            <h3 class="font-bold mt-2">FastAPI 서버</h3>
+                            <p class="text-sm text-gray-500">파일 수신 및 검증</p>
+                        </div>
+                        <div class="arrow hidden md:block">→</div>
+                        <div id="step-supabase" data-step="supabase" class="flow-step content-card p-4 text-center w-48">
+                            <div class="text-4xl">📦</div>
+                            <h3 class="font-bold mt-2">Supabase</h3>
+                            <p class="text-sm text-gray-500">보안 정책 & 저장</p>
+                        </div>
+                         <div class="arrow hidden md:block">→</div>
+                        <div id="step-storage" data-step="storage" class="flow-step content-card p-4 text-center w-48">
+                            <div class="text-4xl">💾</div>
+                            <h3 class="font-bold mt-2">스토리지</h3>
+                            <p class="text-sm text-gray-500">파일 저장 완료</p>
+                        </div>
+                    </div>
+                    
+                    <div id="detail-view" class="content-card p-6 md:p-8 min-h-[20rem] opacity-0">
+                        </div>
+                </section>
+                
+                <section id="config-section" class="hidden-section">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold mb-2">대화형 환경 설정</h2>
+                        <p class="text-gray-600 max-w-3xl mx-auto">Supabase의 핵심 설정인 스토리지 버킷과 행 수준 보안(RLS)을 직접 구성해보며 원리를 이해해 보세요.</p>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="content-card p-6">
+                            <h3 class="text-2xl font-bold mb-4">버킷 생성 시뮬레이터</h3>
+                             <p class="text-gray-500 mb-4">버킷 유형과 제한사항을 선택하면, 이를 생성하는 Python 코드가 동적으로 변경됩니다.</p>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="font-semibold block mb-2">버킷 접근 모델</label>
+                                    <div class="flex space-x-2">
+                                        <button id="bucket-private" class="flex-1 nav-button py-2 px-4 rounded-md active">Private (기본값)</button>
+                                        <button id="bucket-public" class="flex-1 nav-button py-2 px-4 rounded-md">Public</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="bucket-size-limit" class="font-semibold block mb-2">최대 파일 크기 (MB)</label>
+                                    <input type="number" id="bucket-size-limit" value="5" class="interactive-select">
+                                </div>
+                                <div>
+                                    <label class="font-semibold block mb-2">허용 MIME 타입</label>
+                                    <div class="flex items-center space-x-4">
+                                        <label><input type="checkbox" class="mime-type" value="image/png" checked> PNG</label>
+                                        <label><input type="checkbox" class="mime-type" value="image/jpeg" checked> JPEG</label>
+                                        <label><input type="checkbox" class="mime-type" value="image/gif"> GIF</label>
+                                    </div>
+                                </div>
+                                <div id="bucket-code-output" class="code-block"></div>
+                            </div>
+                        </div>
+                        <div class="content-card p-6">
+                            <h3 class="text-2xl font-bold mb-4">RLS 정책 빌더</h3>
+                             <p class="text-gray-500 mb-4">일반적인 시나리오를 선택하여 필요한 행 수준 보안(RLS) SQL 정책을 확인하세요. RLS는 Supabase 보안의 핵심입니다.</p>
+                            <select id="rls-scenario" class="interactive-select mb-4">
+                                <option value="auth-insert">인증된 사용자만 'images' 버킷에 업로드</option>
+                                <option value="owner-insert">자신의 폴더(UID 기반)에만 업로드</option>
+                                <option value="owner-select">자신이 업로드한 파일만 보기</option>
+                                <option value="owner-update">자신이 업로드한 파일만 수정/덮어쓰기</option>
+                                <option value="public-select">모든 사용자가 'public' 버킷 파일 보기</option>
+                            </select>
+                            <div id="rls-code-output" class="code-block"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="code-section" class="hidden-section">
+                     <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold mb-2">FastAPI 코드 탐색기</h2>
+                        <p class="text-gray-600 max-w-3xl mx-auto">실제 이미지 업로드를 처리하는 FastAPI 엔드포인트의 전체 코드입니다. 각 단계별로 주석을 통해 상세히 설명되어 있습니다.</p>
+                    </div>
+                    <div class="content-card p-6">
+                         <div id="code-output" class="code-block"></div>
+                    </div>
+                </section>
+
+                <section id="errors-section" class="hidden-section">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold mb-2">오류 처리 시뮬레이터</h2>
+                        <p class="text-gray-600 max-w-3xl mx-auto">Supabase 스토리지에서 발생할 수 있는 주요 오류와 FastAPI에서 이를 어떻게 처리해야 하는지 알아보세요.</p>
+                    </div>
+                     <div class="content-card p-6 md:p-8">
+                        <select id="error-scenario" class="interactive-select mb-6">
+                            <option value="AccessDenied">AccessDenied (접근 거부)</option>
+                            <option value="EntityTooLarge">EntityTooLarge (파일 너무 큼)</option>
+                            <option value="ResourceAlreadyExists">ResourceAlreadyExists (파일 이미 존재)</option>
+                            <option value="InvalidMimeType">InvalidMimeType (잘못된 파일 타입)</option>
+                        </select>
+                        <div id="error-output" class="grid md:grid-cols-3 gap-6 text-center">
+                            </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+        
+        <footer class="text-center mt-16 text-gray-500">
+            <p>이 애플리케이션은 제공된 기술 문서를 기반으로 생성되었습니다.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const flowDetailData = {
+                client: {
+                    title: '1. 클라이언트: 이미지 전송',
+                    content: `
+                        <p class="mb-4">사용자는 웹 브라우저나 모바일 앱과 같은 클라이언트에서 이미지를 선택하고 서버로 전송합니다. 이 요청은 일반적으로 HTTP POST 요청이며, 'multipart/form-data' 형식으로 파일을 포함합니다.</p>
+                        <h4 class="font-bold mb-2">주요 포인트:</h4>
+                        <ul class="list-disc list-inside text-gray-700">
+                            <li>사용자 인터페이스(UI)에서 파일 입력(<code>&lt;input type="file"&gt;</code>)을 통해 파일 선택</li>
+                            <li>Fetch API 또는 Axios 같은 라이브러리를 사용하여 서버 엔드포인트로 요청 전송</li>
+                            <li>요청 헤더의 <code>Content-Type</code>은 <code>multipart/form-data</code>로 설정됨</li>
+                        </ul>`
+                },
+                fastapi: {
+                    title: '2. FastAPI 서버: 수신 및 검증',
+                    content: `
+                        <p class="mb-4">FastAPI 서버는 클라이언트의 요청을 받아 <code>UploadFile</code> 객체로 파일을 수신합니다. 메모리 효율성을 위해 파일이 너무 크면 임시 디스크 파일로 자동 저장됩니다. 이 단계에서 서버 측 유효성 검사를 수행하는 것이 중요합니다.</p>
+                        <h4 class="font-bold mb-2">주요 포인트:</h4>
+                        <ul class="list-disc list-inside text-gray-700">
+                            <li><strong>파일 수신:</strong> <code>UploadFile</code> 타입을 사용하여 파일과 메타데이터(파일명, MIME 타입)를 얻습니다.</li>
+                            <li><strong>MIME 타입 검증:</strong> <code>file.content_type</code>이 허용된 이미지 형식(예: 'image/jpeg', 'image/png')인지 확인합니다.</li>
+                            <li><strong>파일 크기 검증:</strong> <code>await file.read()</code>로 파일 내용을 읽어 그 크기가 설정된 최대치를 초과하지 않는지 확인합니다.</li>
+                            <li>이는 Supabase 버킷 설정과 별개로, 불필요한 트래픽을 줄이는 2차 방어선 역할을 합니다.</li>
+                        </ul>`
+                },
+                supabase: {
+                    title: '3. Supabase: 보안 정책 및 업로드',
+                    content: `
+                        <p class="mb-4">파일이 유효하면, FastAPI 서버는 Supabase Python 클라이언트를 사용하여 파일을 Supabase 스토리지에 업로드합니다. 업로드 요청 시, Supabase는 먼저 정의된 행 수준 보안(RLS) 정책을 검사하여 해당 작업을 허용할지 결정합니다.</p>
+                        <h4 class="font-bold mb-2">주요 포인트:</h4>
+                        <ul class="list-disc list-inside text-gray-700">
+                            <li><strong>RLS 정책 검사:</strong> <code>storage.objects</code> 테이블에 대한 <code>INSERT</code> 정책이 먼저 평가됩니다. 인증된 사용자인지, 올바른 버킷인지, 특정 폴더 규칙을 따르는지 등을 확인합니다.</li>
+                            <li><strong>버킷 제한 검사:</strong> RLS를 통과하면 버킷 자체에 설정된 MIME 타입 및 파일 크기 제한을 다시 확인합니다.</li>
+                            <li><strong>업로드 실행:</strong> <code>supabase.storage.from_('bucket-name').upload(...)</code> 메서드를 사용하여 실제 파일 업로드가 진행됩니다.</li>
+                        </ul>`
+                },
+                storage: {
+                    title: '4. 스토리지: 파일 저장 완료',
+                    content: `
+                        <p class="mb-4">모든 검증과 정책 검사를 통과하면 파일은 Supabase 스토리지 버킷 내 지정된 경로에 안전하게 저장됩니다. 이 과정에서 고유한 파일명을 생성하여 충돌을 방지하는 것이 좋습니다.</p>
+                        <h4 class="font-bold mb-2">주요 포인트:</h4>
+                        <ul class="list-disc list-inside text-gray-700">
+                            <li><strong>고유한 경로 생성:</strong> 충돌을 피하기 위해 <code>UUID</code>와 같은 라이브러리를 사용하여 파일명을 고유하게 만듭니다. (예: <code>uploads/{uuid.uuid4()}.png</code>)</li>
+                            <li><strong>공개 URL:</strong> 버킷이 Public이거나, Private 버킷에 대한 서명된 URL(Signed URL)을 생성하면 클라이언트가 이미지에 접근할 수 있는 URL을 얻을 수 있습니다.</li>
+                            <li><strong>성공 응답:</strong> FastAPI는 클라이언트에게 성공 메시지와 함께 저장된 파일의 경로 또는 URL을 반환합니다.</li>
+                        </ul>`
+                }
+            };
+
+            const rlsPolicies = {
+                'auth-insert': {
+                    description: '인증된(로그인한) 모든 사용자가 `images` 버킷에 파일을 업로드할 수 있도록 허용합니다. 가장 기본적인 업로드 정책입니다.',
+                    sql: `CREATE POLICY "Authenticated users can upload"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK ( bucket_id = 'images' );`
+                },
+                'owner-insert': {
+                    description: "사용자가 자신의 고유 ID(UID)와 동일한 이름의 폴더 내에만 파일을 업로드할 수 있도록 제한합니다. (예: `user-files/USER_ID_123/avatar.png`) 사용자 데이터를 격리하는 데 유용합니다.",
+                    sql: `CREATE POLICY "User can upload to own folder"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'user-files' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);`
+                },
+                'owner-select': {
+                    description: '사용자가 자신이 소유한(업로드한) 파일만 조회하고 다운로드할 수 있도록 허용합니다. `owner_id`는 파일 업로드 시 자동으로 업로더의 UID로 채워집니다.',
+                    sql: `CREATE POLICY "User can view their own files"
+ON storage.objects FOR SELECT
+TO authenticated
+USING ( owner_id = auth.uid() );`
+                },
+                'owner-update': {
+                    description: '사용자가 자신이 소유한 파일만 수정하거나 덮어쓸 수 있도록 허용합니다. `upsert: true` 옵션을 사용하려면 이 정책이 필요합니다.',
+                    sql: `CREATE POLICY "User can update their own files"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING ( owner_id = auth.uid() )
+WITH CHECK ( owner_id = auth.uid() );`
+                },
+                'public-select': {
+                    description: "인증 여부와 관계없이 모든 사용자가 'public' 버킷에 있는 파일을 조회할 수 있도록 허용합니다. 버킷 자체의 Public 설정과 함께 사용되거나, 더 복잡한 공개 규칙을 위해 사용될 수 있습니다.",
+                    sql: `CREATE POLICY "Public read access"
+ON storage.objects FOR SELECT
+TO public
+USING ( bucket_id = 'public' );`
+                }
+            };
+            
+            const fullCode = `
+# main.py - FastAPI 이미지 업로드 엔드포인트
+import uuid
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from supabase import create_client, Client
+
+# --- 1. 설정 관리 (Pydantic BaseSettings) ---
+# 환경 변수(.env 파일)를 로드하고 유효성을 검사합니다.
+class Settings(BaseSettings):
+    SUPABASE_URL: str
+    SUPABASE_KEY: str # 보통 백엔드에서는 service_role_key를 사용합니다.
+    IMAGE_BUCKET_NAME: str = "images"
+    MAX_IMAGE_SIZE_MB: int = 5
+    ALLOWED_IMAGE_TYPES: list[str] = ["image/jpeg", "image/png"]
+
+    model_config = SettingsConfigDict(env_file=".env")
+
+settings = Settings()
+
+# --- 2. Supabase 클라이언트 초기화 ---
+# 애플리케이션 시작 시 한 번만 클라이언트를 생성하여 재사용합니다.
+supabase_client: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
+
+app = FastAPI()
+
+# --- 3. 이미지 업로드 엔드포인트 ---
+@app.post("/upload-image/")
+async def upload_image_endpoint(file: UploadFile = File(...)):
+    """
+    이미지 파일을 받아 유효성 검사를 거친 후 Supabase 스토리지에 업로드합니다.
+    """
+    # --- 4. 서버 측 유효성 검사 ---
+    if file.content_type not in settings.ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="허용되지 않는 이미지 타입입니다.")
+
+    contents = await file.read()
+    if len(contents) > settings.MAX_IMAGE_SIZE_MB * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="파일 크기가 너무 큽니다.")
+
+    # --- 5. 고유 파일명 생성 ---
+    file_extension = file.filename.split(".")[-1]
+    unique_path = f"public/{uuid.uuid4()}.{file_extension}"
+
+    try:
+        # --- 6. Supabase에 파일 업로드 ---
+        # supabase-py는 동기적으로 작동하므로, 비동기 엔드포인트에서는
+        # starlette.concurrency.run_in_threadpool을 사용하거나,
+        # 비동기 라이브러리(supabase-py-async)를 사용하는 것이 좋습니다.
+        # 이 예제에서는 편의상 동기 코드를 사용합니다.
+        supabase_client.storage.from_(settings.IMAGE_BUCKET_NAME).upload(
+            path=unique_path,
+            file=contents,
+            file_options={"content-type": file.content_type, "upsert": "false"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"스토리지 업로드 실패: {str(e)}")
+
+    # --- 7. 공개 URL 가져오기 및 반환 ---
+    public_url = supabase_client.storage.from_(settings.IMAGE_BUCKET_NAME).get_public_url(unique_path)
+
+    return {"message": "업로드 성공!", "url": public_url}
+`;
+            
+             const errorData = {
+                AccessDenied: {
+                    code: '403 Forbidden',
+                    reason: 'RLS(행 수준 보안) 정책이 해당 작업을 거부했습니다.',
+                    solution: 'Supabase 대시보드에서 Storage -> Policies를 확인하세요. 사용자의 역할(예: `authenticated`)에 대해 요청하는 작업(예: `INSERT`)을 허용하는 정책이 올바른 `bucket_id`와 조건으로 설정되어 있는지 검토해야 합니다.'
+                },
+                EntityTooLarge: {
+                    code: '413 Payload Too Large',
+                    reason: '업로드한 파일이 Supabase 버킷에 설정된 `file_size_limit`을 초과했습니다.',
+                    solution: 'FastAPI 서버에서 1차적으로 파일 크기를 검증하고, Supabase 버킷 설정에서 파일 크기 제한을 늘리거나 클라이언트에게 더 작은 파일을 업로드하도록 안내해야 합니다.'
+                },
+                ResourceAlreadyExists: {
+                    code: '409 Conflict',
+                    reason: '동일한 경로에 파일이 이미 존재하며, `upsert` 옵션이 `false`로 설정되었습니다.',
+                    solution: '파일 덮어쓰기를 허용하려면 `file_options={"upsert": "true"}`로 설정하세요. 또는 UUID 등을 사용하여 항상 고유한 파일 경로를 생성하여 업로드하면 충돌을 피할 수 있습니다.'
+                },
+                InvalidMimeType: {
+                    code: '400 Bad Request',
+                    reason: '업로드한 파일의 MIME 타입이 버킷의 `allowed_mime_types` 목록에 없습니다.',
+                    solution: 'FastAPI에서 1차적으로 MIME 타입을 검증하고, Supabase 버킷 설정에서 허용할 MIME 타입 목록을 올바르게 구성했는지 확인하세요.'
+                }
+            };
+
+
+            const navButtons = document.querySelectorAll('.nav-button');
+            const sections = {
+                flow: document.getElementById('flow-section'),
+                config: document.getElementById('config-section'),
+                code: document.getElementById('code-section'),
+                errors: document.getElementById('errors-section')
+            };
+
+            const flowSteps = document.querySelectorAll('.flow-step');
+            const detailView = document.getElementById('detail-view');
+
+            function switchTab(targetId) {
+                Object.values(sections).forEach(section => section.classList.add('hidden-section'));
+                sections[targetId].classList.remove('hidden-section');
+
+                navButtons.forEach(button => {
+                    button.classList.toggle('active', button.dataset.target === targetId);
+                });
+            }
+            
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => switchTab(button.dataset.target));
+            });
+
+            function updateDetailView(stepId) {
+                const data = flowDetailData[stepId];
+                if (data) {
+                    detailView.innerHTML = `
+                        <h3 class="text-2xl font-bold mb-4">${data.title}</h3>
+                        <div>${data.content}</div>
+                    `;
+                    detailView.style.opacity = 1;
+                    
+                    flowSteps.forEach(s => s.classList.remove('active-step'));
+                    document.getElementById(`step-${stepId}`).classList.add('active-step');
+                }
+            }
+
+            flowSteps.forEach(step => {
+                step.addEventListener('click', () => updateDetailView(step.dataset.step));
+            });
+            
+            // Bucket Configurator
+            const bucketCodeOutput = document.getElementById('bucket-code-output');
+            const bucketPrivateBtn = document.getElementById('bucket-private');
+            const bucketPublicBtn = document.getElementById('bucket-public');
+            const sizeLimitInput = document.getElementById('bucket-size-limit');
+            const mimeCheckboxes = document.querySelectorAll('.mime-type');
+
+            function updateBucketCode() {
+                const isPublic = bucketPublicBtn.classList.contains('active');
+                const sizeLimit = sizeLimitInput.value || 0;
+                const sizeBytes = sizeLimit * 1024 * 1024;
+                const allowedMimes = Array.from(mimeCheckboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => `"${cb.value}"`)
+                    .join(', ');
+
+                const code = `
+# supabase_client: Supabase 클라이언트
+# 버킷 이름: 'my-image-bucket'
+
+res = supabase_client.storage.create_bucket(
+    'my-image-bucket',
+    options={
+        "public": ${isPublic},
+        "allowed_mime_types": [${allowedMimes}],
+        "file_size_limit": ${sizeBytes} # ${sizeLimit}MB
+    }
+)`;
+                bucketCodeOutput.textContent = code.trim();
+            }
+
+            bucketPrivateBtn.addEventListener('click', () => {
+                bucketPrivateBtn.classList.add('active');
+                bucketPublicBtn.classList.remove('active');
+                updateBucketCode();
+            });
+            bucketPublicBtn.addEventListener('click', () => {
+                bucketPublicBtn.classList.add('active');
+                bucketPrivateBtn.classList.remove('active');
+                updateBucketCode();
+            });
+            sizeLimitInput.addEventListener('input', updateBucketCode);
+            mimeCheckboxes.forEach(cb => cb.addEventListener('change', updateBucketCode));
+
+            // RLS Configurator
+            const rlsScenarioSelect = document.getElementById('rls-scenario');
+            const rlsCodeOutput = document.getElementById('rls-code-output');
+
+            function updateRlsCode() {
+                const scenario = rlsPolicies[rlsScenarioSelect.value];
+                const code = `
+-- 설명: ${scenario.description}
+${scenario.sql}
+                `;
+                rlsCodeOutput.textContent = code.trim();
+            }
+            rlsScenarioSelect.addEventListener('change', updateRlsCode);
+
+            // Code Explorer
+            document.getElementById('code-output').textContent = fullCode.trim();
+
+            // Error Simulator
+            const errorScenarioSelect = document.getElementById('error-scenario');
+            const errorOutput = document.getElementById('error-output');
+
+            function updateErrorView() {
+                const error = errorData[errorScenarioSelect.value];
+                errorOutput.innerHTML = `
+                    <div class="content-card p-4">
+                        <h4 class="font-bold text-lg mb-2">HTTP 상태 코드</h4>
+                        <p class="text-xl font-mono bg-red-100 text-red-800 rounded-md py-1">${error.code}</p>
+                    </div>
+                    <div class="content-card p-4">
+                        <h4 class="font-bold text-lg mb-2">발생 원인</h4>
+                        <p>${error.reason}</p>
+                    </div>
+                    <div class="content-card p-4">
+                        <h4 class="font-bold text-lg mb-2">해결 전략</h4>
+                        <p>${error.solution}</p>
+                    </div>
+                `;
+            }
+            errorScenarioSelect.addEventListener('change', updateErrorView);
+
+
+            // Initial state
+            updateDetailView('client');
+            updateBucketCode();
+            updateRlsCode();
+            updateErrorView();
+            switchTab('flow');
+        });
+    </script>
+
+</body>
+</html>
