@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM 에이전트: 대화형 심층 분석</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0a0e17;
+            color: #e0e0e0;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(65, 105, 225, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(138, 43, 226, 0.1) 0%, transparent 50%);
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #4fc3f7;
+            border-bottom-color: #4fc3f7;
+        }
+        .section-title {
+            color: #4fc3f7;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
+        }
+        .card {
+            background-color: rgba(16, 20, 30, 0.8);
+            border-radius: 0.75rem;
+            border: 1px solid rgba(79, 195, 247, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(79, 195, 247, 0.2);
+            border-color: rgba(79, 195, 247, 0.5);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #4fc3f7, #2962ff);
+            color: white;
+            transition: all 0.3s;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #2962ff, #4fc3f7);
+            box-shadow: 0 0 15px rgba(79, 195, 247, 0.5);
+        }
+        .filter-btn {
+            transition: all 0.3s;
+            background-color: rgba(16, 20, 30, 0.8);
+            color: #e0e0e0;
+            border: 1px solid rgba(79, 195, 247, 0.3);
+        }
+        .filter-btn.active {
+            background: linear-gradient(45deg, #4fc3f7, #2962ff);
+            color: white;
+            box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        .architecture-component {
+            cursor: pointer;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+            background-color: rgba(16, 20, 30, 0.8);
+            transition: all 0.3s;
+        }
+        .architecture-component:hover {
+            border-color: #4fc3f7;
+            box-shadow: 0 0 15px rgba(79, 195, 247, 0.3);
+        }
+        .architecture-component.active {
+            background-color: rgba(79, 195, 247, 0.2);
+            border-color: #4fc3f7;
+            box-shadow: 0 0 20px rgba(79, 195, 247, 0.4);
+        }
+        header {
+            background-color: rgba(10, 14, 23, 0.9);
+            border-bottom: 1px solid rgba(79, 195, 247, 0.2);
+        }
+        footer {
+            background-color: rgba(10, 14, 23, 0.9);
+            border-top: 1px solid rgba(79, 195, 247, 0.2);
+        }
+        .glow-text {
+            text-shadow: 0 0 8px rgba(79, 195, 247, 0.7);
+        }
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) infinite ease-in-out;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="backdrop-blur-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-2xl font-bold text-cyan-300 glow-text">LLM 에이전트 리포트</h1>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#intro" class="nav-link text-gray-300 font-medium border-b-2 border-transparent pb-1">소개</a>
+                    <a href="#architecture" class="nav-link text-gray-300 font-medium border-b-2 border-transparent pb-1">작동 원리</a>
+                    <a href="#applications" class="nav-link text-gray-300 font-medium border-b-2 border-transparent pb-1">활용 분야</a>
+                    <a href="#ecosystem" class="nav-link text-gray-300 font-medium border-b-2 border-transparent pb-1">생태계</a>
+                    <a href="#challenges" class="nav-link text-gray-300 font-medium border-b-2 border-transparent pb-1">도전 과제</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-300 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-900">
+            <a href="#intro" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-800">소개</a>
+            <a href="#architecture" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-800">작동 원리</a>
+            <a href="#applications" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-800">활용 분야</a>
+            <a href="#ecosystem" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-800">생태계</a>
+            <a href="#challenges" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-800">도전 과제</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="intro" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 section-title">LLM 에이전트: AI의 새로운 지평</h2>
+            <p class="text-center text-lg text-gray-300 max-w-3xl mx-auto mb-12">
+                LLM 에이전트는 단순한 언어 모델을 넘어, 목표 달성을 위해 자율적으로 계획하고 행동하는 지능형 시스템입니다. 이들은 AI 기술이 수동적 텍스트 생성을 넘어 능동적 문제 해결로 나아가는 중요한 전환점이며, 인공 일반 지능(AGI)으로 향하는 핵심 경로로 여겨집니다.
+            </p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="card p-6 text-center">
+                    <h3 class="text-xl font-bold mb-3 text-cyan-300">목표 지향적 행동</h3>
+                    <p class="text-gray-400">명확한 목표를 설정하고, 평가, 결정, 실행, 관찰의 순환 과정을 통해 자율적으로 과제를 수행합니다.</p>
+                </div>
+                <div class="card p-6 text-center">
+                    <h3 class="text-xl font-bold mb-3 text-cyan-300">동적 적응 능력</h3>
+                    <p class="text-gray-400">환경 변화나 새로운 정보에 맞춰 실시간으로 계획을 수정하고 행동을 조정하는 유연성을 가집니다.</p>
+                </div>
+                <div class="card p-6 text-center">
+                    <h3 class="text-xl font-bold mb-3 text-cyan-300">외부 세계와 상호작용</h3>
+                    <p class="text-gray-400">API, 데이터베이스 등 외부 도구를 활용하여 언어 모델의 한계를 넘어 실제 세계의 작업을 실행합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 section-title">작동 원리: 에이전트의 구조</h2>
+            <p class="text-center text-lg text-gray-300 max-w-3xl mx-auto mb-12">
+                LLM 에이전트는 여러 핵심 구성 요소가 유기적으로 상호작용하여 복잡한 작업을 수행합니다. 아래 다이어그램의 각 구성 요소를 클릭하여 자세한 설명을 확인해 보세요. 이들의 시너지가 에이전트의 지능을 결정합니다.
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+                <div class="lg:col-span-3">
+                    <div class="relative p-4 bg-gray-900 rounded-lg shadow-xl border border-cyan-300/20">
+                        <div class="grid grid-cols-3 grid-rows-3 gap-4 h-[400px]">
+                            <div id="comp-core" class="architecture-component col-start-2 row-start-2 flex items-center justify-center p-3 text-center rounded-lg">
+                                <span class="font-bold text-cyan-300">🧠<br>에이전트 코어 (두뇌)</span>
+                            </div>
+                            <div id="comp-planner" class="architecture-component col-start-1 row-start-1 flex items-center justify-center p-3 text-center rounded-lg">
+                                <span class="font-bold text-cyan-300">🗺️<br>계획 모듈</span>
+                            </div>
+                            <div id="comp-memory" class="architecture-component col-start-3 row-start-1 flex items-center justify-center p-3 text-center rounded-lg">
+                                <span class="font-bold text-cyan-300">💾<br>메모리 시스템</span>
+                            </div>
+                            <div id="comp-tools" class="architecture-component col-start-1 row-start-3 flex items-center justify-center p-3 text-center rounded-lg">
+                                <span class="font-bold text-cyan-300">🛠️<br>도구 통합</span>
+                            </div>
+                            <div id="comp-interface" class="architecture-component col-start-3 row-start-3 flex items-center justify-center p-3 text-center rounded-lg">
+                                <span class="font-bold text-cyan-300">👤<br>상호작용 계층</span>
+                            </div>
+                        </div>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full -z-10">
+                             <svg width="100%" height="100%" class="absolute top-0 left-0">
+                                <line x1="50%" y1="50%" x2="16.66%" y2="16.66%" stroke="#4fc3f7" stroke-width="2" stroke-dasharray="5,5"/>
+                                <line x1="50%" y1="50%" x2="83.33%" y2="16.66%" stroke="#4fc3f7" stroke-width="2" stroke-dasharray="5,5"/>
+                                <line x1="50%" y1="50%" x2="16.66%" y2="83.33%" stroke="#4fc3f7" stroke-width="2" stroke-dasharray="5,5"/>
+                                <line x1="50%" y1="50%" x2="83.33%" y2="83.33%" stroke="#4fc3f7" stroke-width="2" stroke-dasharray="5,5"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="architecture-details" class="lg:col-span-2 card p-6 min-h-[440px]">
+                    <h3 id="details-title" class="text-xl font-bold text-cyan-300 mb-2">구성 요소를 선택하세요</h3>
+                    <p id="details-content" class="text-gray-300">각 구성 요소가 어떻게 상호작용하여 에이전트의 지능적인 행동을 가능하게 하는지 알아보세요.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="applications" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 section-title">활용 분야: 산업을 혁신하는 에이전트</h2>
+            <p class="text-center text-lg text-gray-300 max-w-3xl mx-auto mb-12">
+                LLM 에이전트는 다양한 산업 분야에서 복잡한 문제를 해결하고 프로세스를 자동화하며 혁신을 주도하고 있습니다. 관심 있는 산업을 선택하여 구체적인 활용 사례를 확인해 보세요.
+            </p>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
+                <button class="filter-btn active px-4 py-2 rounded-full" data-filter="all">전체</button>
+                <button class="filter-btn px-4 py-2 rounded-full" data-filter="healthcare">의료</button>
+                <button class="filter-btn px-4 py-2 rounded-full" data-filter="finance">금융</button>
+                <button class="filter-btn px-4 py-2 rounded-full" data-filter="development">소프트웨어 개발</button>
+                <button class="filter-btn px-4 py-2 rounded-full" data-filter="customer-service">고객 서비스</button>
+                <button class="filter-btn px-4 py-2 rounded-full" data-filter="etc">기타</button>
+            </div>
+            <div id="applications-content" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </section>
+
+        <section id="ecosystem" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 section-title">개발 생태계</h2>
+            <p class="text-center text-lg text-gray-300 max-w-3xl mx-auto mb-12">
+                LLM 에이전트 기술은 주요 기업과 오픈소스 커뮤니티의 활발한 참여로 빠르게 성장하고 있습니다. 다양한 개발 프레임워크는 에이전트 구축의 복잡성을 줄여 기술 혁신을 가속화합니다.
+            </p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl mb-2 text-cyan-300">LangChain</h3>
+                    <p class="text-gray-400">모듈식 구조로 복잡한 LLM 워크플로우를 쉽게 구성하고, 다양한 외부 도구와의 통합을 지원하는 가장 대표적인 프레임워크입니다.</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl mb-2 text-cyan-300">AutoGen</h3>
+                    <p class="text-gray-400">Microsoft에서 개발했으며, 코드, 모델, 프로세스 생성을 자동화하여 최소한의 코딩으로 맞춤형 다중 에이전트 시스템을 구축할 수 있도록 돕습니다.</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl mb-2 text-cyan-300">CrewAI</h3>
+                    <p class="text-gray-400">자율 에이전트들이 협력하여 복잡한 작업을 수행하도록 오케스트레이션하는 데 중점을 둔 프레임워크로, 역할 기반 에이전트 설계가 특징입니다.</p>
+                </div>
+                 <div class="card p-6">
+                    <h3 class="font-bold text-xl mb-2 text-cyan-300">LlamaIndex</h3>
+                    <p class="text-gray-400">LLM을 외부의 다양한 데이터 소스와 연결하는 데이터 프레임워크로, RAG(검색 증강 생성) 기반의 데이터 에이전트 구축에 특화되어 있습니다.</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl mb-2 text-cyan-300">MetaGPT</h3>
+                    <p class="text-gray-400">소프트웨어 개발팀의 워크플로우를 모방하여 다중 에이전트가 협력하여 소프트웨어를 개발하는 과정을 자동화하는 것을 목표로 합니다.</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl mb-2 text-cyan-300">오픈소스 프로젝트</h3>
+                    <p class="text-gray-400">AutoGPT, BabyAGI 등 초기 실험적 프로젝트들이 에이전트의 자율적 작업 실행 개념을 대중화했으며, 커뮤니티 주도의 혁신을 이끌고 있습니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="challenges" class="scroll-mt-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 section-title">도전 과제와 미래</h2>
+            <p class="text-center text-lg text-gray-300 max-w-3xl mx-auto mb-12">
+                LLM 에이전트는 혁신적인 잠재력과 함께 기술적, 윤리적, 사회적 도전 과제에 직면해 있습니다. 아래 차트는 보고서에 언급된 주요 도전 과제들의 분포를 보여줍니다. 이러한 문제를 해결하는 것이 안전한 기술 발전을 위해 필수적입니다.
+            </p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="card p-6">
+                    <div class="chart-container">
+                        <canvas id="challengesChart"></canvas>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="card p-6">
+                        <h3 class="font-bold text-xl mb-2 text-cyan-300">미래 동향</h3>
+                        <ul class="list-disc list-inside text-gray-400 space-y-1">
+                            <li>멀티모달 융합 (텍스트, 이미지, 음성 처리)</li>
+                            <li>자율성 증대 및 자체 개선 능력 강화</li>
+                            <li>다중 에이전트 시스템의 협업 능력 고도화</li>
+                            <li>특정 산업 분야에 특화된 도메인 전문 모델</li>
+                        </ul>
+                    </div>
+                     <div class="card p-6">
+                        <h3 class="font-bold text-xl mb-2 text-cyan-300">책임감 있는 개발의 중요성</h3>
+                        <p class="text-gray-400">
+                           에이전트의 발전은 환각, 편향, 개인정보 보호와 같은 문제들을 동반합니다. 기술 발전뿐만 아니라 사회적 영향에 대한 깊은 성찰과 인간 중심의 원칙을 바탕으로 안전, 정렬, 강력한 평가에 대한 지속적인 연구가 필요합니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
+            <p class="text-gray-300">&copy; 2025 LLM Agent Interactive Report. All rights reserved.</p>
+            <p class="text-sm text-gray-500 mt-1">Based on the "LLM 에이전트 심층 연구" report.</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Create stars for background
+    function createStars() {
+        const container = document.body;
+        const starCount = 50;
+        
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            
+            // Random properties
+            const size = Math.random() * 3;
+            const posX = Math.random() * 100;
+            const posY = Math.random() * 100;
+            const duration = 2 + Math.random() * 3;
+            
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${posX}%`;
+            star.style.top = `${posY}%`;
+            star.style.setProperty('--duration', `${duration}s`);
+            
+            container.appendChild(star);
+        }
+    }
+    
+    createStars();
+
+    const architectureData = {
+        'comp-core': {
+            title: '🧠 에이전트 코어/두뇌',
+            content: 'LLM(예: GPT-4)이 중앙 처리 장치 역할을 합니다. 사용자 요청을 이해하고, 추론하며, 의사 결정을 내리는 등 에이전트의 모든 지능적 활동을 주도합니다. 코어 모델의 성능이 에이전트의 전반적인 능력을 결정합니다.'
+        },
+        'comp-planner': {
+            title: '🗺️ 계획 모듈',
+            content: '복잡한 목표를 작고 실행 가능한 하위 단계로 분해합니다. 다양한 전략을 평가하고, 최적의 실행 계획을 수립하며, 환경 변화에 따라 계획을 동적으로 조정하는 역할을 담당합니다.'
+        },
+        'comp-memory': {
+            title: '💾 메모리 시스템',
+            content: '과거의 상호작용, 학습된 정보, 사용자 선호도 등을 저장하고 필요할 때 회수합니다. 단기 기억(현재 대화)과 장기 기억(지속적 지식)을 통해 맥락을 유지하고 개인화된 경험을 제공합니다.'
+        },
+        'comp-tools': {
+            title: '🛠️ 도구 통합',
+            content: '에이전트가 언어 모델의 한계를 넘어 실제 행동을 취할 수 있도록 외부 기능(API, 데이터베이스, 웹 검색 등)에 접근하는 통로입니다. 이를 통해 최신 정보를 얻거나 다른 시스템과 상호작용할 수 있습니다.'
+        },
+        'comp-interface': {
+            title: '👤 상호작용 계층',
+            content: '사용자와 에이전트가 소통하는 창구입니다. 채팅 UI, 음성 인터페이스 등 사용자가 에이전트에게 지시를 내리고 결과를 확인할 수 있는 모든 수단을 포함하며, 사용자 경험(UX)에 큰 영향을 미칩니다.'
+        }
+    };
+
+    const architectureComponents = document.querySelectorAll('.architecture-component');
+    const detailsTitle = document.getElementById('details-title');
+    const detailsContent = document.getElementById('details-content');
+
+    architectureComponents.forEach(comp => {
+        comp.addEventListener('click', () => {
+            architectureComponents.forEach(c => c.classList.remove('active'));
+            comp.classList.add('active');
+            const data = architectureData[comp.id];
+            detailsTitle.textContent = data.title;
+            detailsContent.textContent = data.content;
+        });
+    });
+
+
+    const applicationsData = [
+        { category: 'healthcare', title: '의료: 진단 보조', content: '환자 데이터를 분석하고 의료 기록을 검토하여 의사의 진단을 보조하고 치료 옵션을 제안합니다. 진단 오류를 줄이고 환자 대기 시간을 단축하는 데 기여합니다.' },
+        { category: 'finance', title: '금융: 사기 탐지', content: '실시간 거래 데이터를 모니터링하여 의심스러운 패턴을 식별하고 금융 사기를 예방합니다. 또한 시장 데이터를 분석하여 투자 전략을 최적화합니다.' },
+        { category: 'development', title: '소프트웨어 개발: 코드 자동화', content: '코드 생성, 디버깅, 문서화를 자동화하여 개발 생산성을 크게 향상시킵니다. GitHub Copilot이 대표적인 예입니다.' },
+        { category: 'customer-service', title: '고객 서비스: 개인화 응대', content: '24시간 고객 문의를 처리하고, CRM 데이터와 연동하여 고객의 이전 기록을 바탕으로 개인화된 지원을 제공합니다.' },
+        { category: 'etc', title: '제조/공급망', content: '제품 설계, 품질 관리, 로봇 제어 시스템을 강화하고, 물류 모니터링 및 재고 관리를 최적화하여 공급망 효율을 높입니다.' },
+        { category: 'etc', title: '교육/법률', content: '개인화된 학습을 제공하는 디지털 튜터 역할을 하거나, 방대한 법률 문서를 검토하고 주요 정보를 추출하여 법률 연구를 가속화합니다.' },
+    ];
+    
+    const applicationsContainer = document.getElementById('applications-content');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+
+    const renderApplications = (filter = 'all') => {
+        applicationsContainer.innerHTML = '';
+        const filteredData = filter === 'all' 
+            ? applicationsData 
+            : applicationsData.filter(item => item.category === filter);
+        
+        filteredData.forEach(item => {
+            const appCard = document.createElement('div');
+            appCard.className = 'card p-6';
+            appCard.innerHTML = `
+                <h3 class="font-bold text-lg mb-2 text-cyan-300">${item.title}</h3>
+                <p class="text-gray-400 text-sm">${item.content}</p>
+            `;
+            applicationsContainer.appendChild(appCard);
+        });
+    };
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            renderApplications(button.dataset.filter);
+        });
+    });
+
+    renderApplications();
+
+
+    const challengesCtx = document.getElementById('challengesChart').getContext('2d');
+    const challengesChart = new Chart(challengesCtx, {
+        type: 'radar',
+        data: {
+            labels: ['기술적 과제', '설계상 미흡함', '윤리적 딜레마', '사회적 영향'],
+            datasets: [{
+                label: '도전 과제 분포',
+                data: [8, 5, 6, 7],
+                backgroundColor: 'rgba(79, 195, 247, 0.2)',
+                borderColor: 'rgb(79, 195, 247)',
+                pointBackgroundColor: 'rgb(79, 195, 247)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(79, 195, 247)'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    pointLabels: {
+                        font: { size: 14, family: "'Noto Sans KR', sans-serif" },
+                        color: '#e0e0e0'
+                    },
+                    ticks: {
+                        backdropColor: 'transparent',
+                        stepSize: 2,
+                        color: '#e0e0e0'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                     labels: {
+                        font: {
+                            family: "'Noto Sans KR', sans-serif"
+                        },
+                        color: '#e0e0e0'
+                    }
+                }
+            }
+        }
+    });
+
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+    
+    document.querySelectorAll('#mobile-menu a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+        });
+    });
+    
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('section');
+
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (pageYOffset >= sectionTop - 80) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').substring(1) === current) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+});
+</script>
+</body>
+</html>
