@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM 프롬프트 마켓플레이스: 인터랙티브 분석</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Visualization & Content Choices: 
+        - Market Growth (Report Sec 6): Goal: Show explosive growth. Viz: Bar charts. Interaction: Tooltips on hover. Justification: Clearly shows year-over-year growth projections. Library: Chart.js.
+        - Platform Ecosystem (Report Sec 2.1): Goal: Compare platforms. Viz: Interactive card grid. Interaction: Click to expand details. Justification: More engaging and mobile-friendly than a large static table. Method: HTML/JS.
+        - Value Exchange (Report Sec 7): Goal: Show benefits for different stakeholders. Viz: Two-column layout with a toggle. Interaction: JS-powered toggle to switch views. Justification: Personalizes the content for the user's role. Method: HTML/JS.
+        - Core Challenges (Report Sec 8): Goal: Break down complex risks. Viz: Grid of clickable cards. Interaction: Click to show details in a summary box. Justification: Organizes information into manageable, thematic chunks. Method: HTML/JS.
+        - Future Outlook (Report Sec 9.1): Goal: Illustrate evolution. Viz: Horizontal timeline. Interaction: Clickable nodes. Justification: Provides a clear, visual narrative of the market's progression. Method: HTML/JS.
+        - Recommendations (Report Sec 10.2): Goal: Provide actionable advice. Viz: Tabbed interface. Interaction: Click tabs for different roles. Justification: Delivers tailored advice efficiently. Method: HTML/JS. -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #F8F7F4;
+            color: #3D405B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #E07A5F;
+            border-bottom-color: #E07A5F;
+        }
+        .platform-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .platform-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .tab.active {
+            background-color: #81C784;
+            color: white;
+        }
+        .toggle-btn.active {
+            background-color: #3D405B;
+            color: white;
+        }
+        .toggle-btn {
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-[#F8F7F4]/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-[#3D405B]">프롬프트 마켓플레이스 분석</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#introduction" class="nav-link px-3 py-2 rounded-md text-sm font-medium">소개</a>
+                        <a href="#market" class="nav-link px-3 py-2 rounded-md text-sm font-medium">시장 현황</a>
+                        <a href="#ecosystem" class="nav-link px-3 py-2 rounded-md text-sm font-medium">생태계</a>
+                        <a href="#value-exchange" class="nav-link px-3 py-2 rounded-md text-sm font-medium">이해관계자</a>
+                        <a href="#challenges" class="nav-link px-3 py-2 rounded-md text-sm font-medium">핵심 과제</a>
+                        <a href="#future" class="nav-link px-3 py-2 rounded-md text-sm font-medium">미래 전망</a>
+                        <a href="#recommendations" class="nav-link px-3 py-2 rounded-md text-sm font-medium">전략 제언</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section id="introduction" class="text-center py-16 md:py-24">
+            <h2 class="text-4xl md:text-5xl font-bold tracking-tight text-[#3D405B]">새로운 경제의 탄생: 프롬프트 이코노미</h2>
+            <p class="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-gray-600">LLM의 잠재력을 최대로 이끌어내는 '프롬프트'가 거래되는 시장이 폭발적으로 성장하고 있습니다. 본 인터랙티브 리포트는 프롬프트 마켓플레이스의 현황, 생태계, 그리고 미래를 심도 있게 분석합니다.</p>
+        </section>
+
+        <section id="market" class="py-16 md:py-24 bg-white rounded-2xl shadow-lg p-6 md:p-12 my-12">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3D405B]">폭발적인 시장 성장</h2>
+                <p class="mt-3 text-lg text-gray-600">프롬프트 엔지니어링과 LLM 시장은 향후 10년간 기하급수적인 성장이 예상되며, 이는 프롬프트 마켓플레이스의 밝은 미래를 시사합니다.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-center mb-4 text-[#3D405B]">프롬프트 엔지니어링 시장 전망 (USD)</h3>
+                    <div class="chart-container">
+                        <canvas id="promptMarketChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-center mb-4 text-[#3D405B]">대규모 언어 모델(LLM) 시장 전망 (USD)</h3>
+                    <div class="chart-container">
+                        <canvas id="llmMarketChart"></canvas>
+                    </div>
+                </div>
+            </div>
+             <div class="mt-12">
+                <h3 class="text-2xl font-bold text-center mb-6 text-[#3D405B]">성장의 핵심 동력</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <div class="text-3xl mb-2">💡</div>
+                        <h4 class="font-bold mb-1">고품질 프롬프트 수요</h4>
+                        <p class="text-sm text-gray-600">정밀하고 특화된 AI 결과물을 얻기 위한 전문가 제작 프롬프트의 필요성이 증대되고 있습니다.</p>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <div class="text-3xl mb-2">💰</div>
+                        <h4 class="font-bold mb-1">수익화 기회</h4>
+                        <p class="text-sm text-gray-600">프롬프트 엔지니어들이 자신의 전문 지식을 시장성 있는 자산으로 전환할 수 있는 새로운 길이 열렸습니다.</p>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <div class="text-3xl mb-2">🚀</div>
+                        <h4 class="font-bold mb-1">AI 기술의 대중화</h4>
+                        <p class="text-sm text-gray-600">기술 지식이 부족한 사용자도 마켓플레이스를 통해 고급 AI 기능을 쉽게 활용할 수 있게 되었습니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ecosystem" class="py-16 md:py-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3D405B]">마켓플레이스 생태계 탐험</h2>
+                <p class="mt-3 text-lg text-gray-600">각기 다른 특징을 가진 주요 플랫폼들이 시장을 형성하고 있습니다. 카드를 클릭하여 자세한 정보를 확인하세요.</p>
+            </div>
+            <div id="platform-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            </div>
+        </section>
+
+        <section id="value-exchange" class="py-16 md:py-24 bg-white rounded-2xl shadow-lg p-6 md:p-12 my-12">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3D405B]">누가, 무엇을 얻는가?</h2>
+                <p class="mt-3 text-lg text-gray-600">프롬프트 마켓플레이스는 구매자와 판매자 모두에게 매력적인 가치를 제공합니다. 관점을 선택하여 확인해보세요.</p>
+                <div id="stakeholder-toggle" class="mt-6 inline-flex rounded-md shadow-sm">
+                    <button data-view="buyers" class="toggle-btn px-6 py-2 text-sm font-medium border border-gray-300 rounded-l-md focus:z-10 focus:ring-2 focus:ring-[#81C784] active">구매자</button>
+                    <button data-view="sellers" class="toggle-btn px-6 py-2 text-sm font-medium border-t border-b border-r border-gray-300 rounded-r-md focus:z-10 focus:ring-2 focus:ring-[#81C784]">판매자</button>
+                </div>
+            </div>
+            <div id="benefits-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </section>
+
+        <section id="challenges" class="py-16 md:py-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3D405B]">핵심 과제 및 위험 요소</h2>
+                <p class="mt-3 text-lg text-gray-600">지속 가능한 성장을 위해 시장이 해결해야 할 주요 과제들이 있습니다. 각 항목을 클릭하여 내용을 살펴보세요.</p>
+            </div>
+            <div class="lg:flex lg:space-x-8">
+                <div id="challenge-nodes" class="lg:w-1/3 grid grid-cols-2 lg:grid-cols-1 gap-4 mb-8 lg:mb-0">
+                </div>
+                <div class="lg:w-2/3 bg-white p-8 rounded-2xl shadow-lg min-h-[200px]">
+                    <h3 id="challenge-title" class="text-xl font-bold text-[#3D405B] mb-2">항목을 선택하세요</h3>
+                    <p id="challenge-description" class="text-gray-600">왼쪽의 과제 항목을 클릭하면 여기에 상세 설명이 표시됩니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="py-16 md:py-24 bg-white rounded-2xl shadow-lg p-6 md:p-12 my-12">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3D405B]">마켓플레이스의 미래</h2>
+                <p class="mt-3 text-lg text-gray-600">AI 기술 발전에 따라 프롬프트 마켓플레이스는 단순한 거래 공간을 넘어 진화할 것입니다.</p>
+            </div>
+            <div id="future-timeline" class="relative">
+                <div class="hidden md:block border-l-2 border-gray-300 absolute h-full top-0 left-1/2 -ml-[1px]"></div>
+            </div>
+        </section>
+
+        <section id="recommendations" class="py-16 md:py-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3D405B]">이해관계자별 전략 제언</h2>
+                <p class="mt-3 text-lg text-gray-600">프롬프트 마켓플레이스를 효과적으로 활용하고 발전에 기여하기 위한 전략입니다.</p>
+            </div>
+            <div>
+                <div class="border-b border-gray-200">
+                    <nav id="reco-tabs" class="-mb-px flex space-x-4 justify-center" aria-label="Tabs">
+                    </nav>
+                </div>
+                <div id="reco-content" class="mt-8">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-sm">
+            <p>본 페이지는 제공된 'LLM 프롬프트 마켓플레이스 연구' 보고서를 기반으로 생성된 인터랙티브 웹 애플리케이션입니다.</p>
+            <p class="mt-1">© 2025 Interactive Report. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const appData = {
+            platforms: [
+                { name: 'PromptBase', desc: '최초의 프롬프트 마켓플레이스. 다양한 LLM 지원.', model: '판매 수수료 (20%)', llms: 'GPT, DALL-E, Midjourney 등', features: '맞춤형 프롬프트 주문, 방대한 프롬프트 라이브러리' },
+                { name: 'Promptsideas.com', desc: '프롬프트와 AI 도구를 함께 판매.', model: '판매 수수료 (30%)', llms: 'ChatGPT, Claude, Gemini 등', features: 'AI 도구 제공, 프롬프트 엔지니어링 인턴십' },
+                { name: 'FlowGPT', desc: 'AI 캐릭터 롤플레잉 기능이 특화된 플랫폼.', model: '프리미엄 (무료/유료 구독)', llms: 'ChatGPT 등', features: 'AI 여자친구/남자친구, 캐릭터 분류, 현상금 시스템' },
+                { name: 'PromptHero', desc: 'AI 아트 이미지와 프롬프트를 위한 거대 검색 엔진.', model: '프리미엄 (무료/유료 구독)', llms: 'Stable Diffusion, Midjourney 등', features: '방대한 이미지 검색, 프롬프트 엔지니어링 아카데미' },
+                { name: 'AIPRM', desc: '방대한 공개 프롬프트를 보유한 관리 도구 및 라이브러리.', model: '프리미엄 (무료 라이브러리/유료 기능)', llms: 'ChatGPT, Claude 등', features: '4000개 이상 공개 프롬프트, 팀 공유 기능' },
+            ],
+            benefits: {
+                buyers: [
+                    { title: '전문 지식 접근', icon: '🧠', text: '숙련된 엔지니어가 설계한 최적화된 프롬프트를 통해 더 나은 AI 결과물을 얻을 수 있습니다.' },
+                    { title: '시간 및 비용 절약', icon: '⏳', text: '프롬프트 개발 및 테스트에 드는 시간과 API 사용 비용을 크게 절감할 수 있습니다.' },
+                    { title: '개발 가속화', icon: '⚡️', text: '기성 프롬프트를 활용하여 AI 기반 애플리케이션의 프로토타이핑과 배포를 빠르게 진행할 수 있습니다.' },
+                    { title: '창의성 증진', icon: '💡', text: '다양한 프롬프트에 노출되어 AI의 새로운 활용 아이디어나 영감을 얻을 수 있습니다.' },
+                ],
+                sellers: [
+                    { title: '기술 수익화', icon: '💵', text: '프롬프트 엔지니어링 전문 지식을 통해 직접적인 금전적 보상을 얻을 수 있습니다.' },
+                    { title: '수동적 소득 창출', icon: '🔁', text: '한 번 제작한 프롬프트가 여러 번 판매되어 지속적인 수입원이 될 수 있습니다.' },
+                    { title: '평판 구축', icon: '🏆', text: '성공적인 판매 기록으로 업계 내에서 자신의 포트폴리오와 명성을 쌓을 수 있습니다.' },
+                    { title: '글로벌 시장 접근', icon: '🌍', text: '플랫폼을 통해 전 세계의 잠재 구매자에게 자신의 프롬프트를 노출시킬 수 있습니다.' },
+                ]
+            },
+            challenges: [
+                { id: 'quality', title: '품질 관리', description: '방대한 프롬프트 속에서 일관된 품질을 유지하는 것은 큰 과제입니다. 수동 검토의 한계, LLM 업데이트에 따른 프롬프트 노후화 문제가 있습니다.' },
+                { id: 'ethics', title: '윤리 문제', description: 'AI 결과물의 편향, 허위 정보 생성, 탈옥 등 악의적 사용을 방지하기 위한 강력한 콘텐츠 중재와 윤리적 가이드라인이 필요합니다.' },
+                { id: 'ip', title: '지적 재산권', description: '프롬프트 자체의 저작권, 소유권, 그리고 결과물로부터 프롬프트를 유추하는 문제 등 복잡한 법적 과제가 존재합니다.' },
+                { id: 'competition', title: '무료 리소스와의 경쟁', description: 'GitHub, Reddit 등 오픈소스 커뮤니티에서 무료로 공유되는 수많은 프롬프트와 경쟁하기 위해 유료 마켓플레이스는 명확한 가치를 제공해야 합니다.' }
+            ],
+            futureTimeline: [
+                 { year: '현재', title: '단순 거래 플랫폼', text: '개별 프롬프트를 사고파는 초기 단계의 마켓플레이스가 주를 이룸.', side: 'left' },
+                 { year: '단기 미래', title: 'AI 지원 및 전문화', text: 'AI 기반 프롬프트 생성/최적화 도구가 통합되고, 법률, 의료 등 산업별 틈새 마켓플레이스가 등장.', side: 'right' },
+                 { year: '장기 미래', title: '통합 솔루션 허브', text: 'LLMOps 플랫폼과 긴밀하게 통합되고, 프롬프트 번들, 워크플로 템플릿, 성능 분석 등 포괄적인 솔루션을 제공하는 허브로 진화.', side: 'left' },
+                 { year: '궁극적 비전', title: '생태계의 중추', text: '블록체인 기반 IP 관리, 자동화된 품질 보증 등을 통해 AI 개발 생태계의 핵심 인프라로 자리매김.', side: 'right' }
+            ],
+            recommendations: {
+                buyers: { title: '구매자', content: [
+                    '필요한 프롬프트의 목적과 원하는 결과물을 명확히 정의하세요.',
+                    '판매자의 평판과 다른 사용자들의 리뷰를 꼼꼼히 확인하세요.',
+                    '구매 전 라이선스 조건을 반드시 확인하여 사용 범위를 이해하세요.',
+                    '특수하고 복잡한 요구사항은 맞춤 주문 제작을 고려해보세요.'
+                ]},
+                sellers: { title: '판매자', content: [
+                    '품질, 독창성, 상세한 설명으로 경쟁력을 확보하세요.',
+                    '특정 산업이나 AI 모델에 전문성을 구축하여 틈새 시장을 공략하세요.',
+                    '사용자 피드백을 적극 활용하여 평판을 관리하고 프롬프트를 개선하세요.',
+                    '플랫폼의 수수료 및 IP 정책을 명확히 이해하고 활동하세요.'
+                ]},
+                operators: { title: '운영자', content: [
+                    '플랫폼 신뢰도 유지를 위해 강력한 품질 관리 및 중재 시스템에 투자하세요.',
+                    '제작자와 구매자 모두를 보호하는 명확하고 공정한 IP 및 라이선스 정책을 제공하세요.',
+                    '단순 거래를 넘어 교육, 분석 등 부가 가치 기능을 혁신하세요.',
+                    'AI 기술 변화에 민첩하게 대응하며 플랫폼을 지속적으로 발전시키세요.'
+                ]}
+            }
+        };
+
+        const renderPlatformGrid = () => {
+            const grid = document.getElementById('platform-grid');
+            grid.innerHTML = appData.platforms.map((p, index) => `
+                <div class="platform-card bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer" data-index="${index}">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-[#3D405B]">${p.name}</h3>
+                        <p class="mt-2 text-gray-600">${p.desc}</p>
+                    </div>
+                    <div class="detail-panel bg-gray-50 p-6 border-t border-gray-200" style="display: none;">
+                        <p class="text-sm"><strong class="font-semibold text-gray-700">수익 모델:</strong> ${p.model}</p>
+                        <p class="text-sm mt-2"><strong class="font-semibold text-gray-700">주요 지원 LLM:</strong> ${p.llms}</p>
+                        <p class="text-sm mt-2"><strong class="font-semibold text-gray-700">고유 기능:</strong> ${p.features}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.platform-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const detailPanel = card.querySelector('.detail-panel');
+                    detailPanel.style.display = detailPanel.style.display === 'none' ? 'block' : 'none';
+                });
+            });
+        };
+
+        const renderBenefits = (view) => {
+            const container = document.getElementById('benefits-container');
+            container.innerHTML = appData.benefits[view].map(b => `
+                <div class="bg-gray-50 p-6 rounded-lg text-center">
+                    <div class="text-4xl mb-3">${b.icon}</div>
+                    <h4 class="text-lg font-bold text-[#3D405B]">${b.title}</h4>
+                    <p class="mt-2 text-sm text-gray-600">${b.text}</p>
+                </div>
+            `).join('');
+        };
+        
+        const setupStakeholderToggle = () => {
+            const toggle = document.getElementById('stakeholder-toggle');
+            toggle.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const view = e.target.dataset.view;
+                    toggle.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    renderBenefits(view);
+                }
+            });
+        };
+
+        const setupChallengeNodes = () => {
+            const nodesContainer = document.getElementById('challenge-nodes');
+            const titleEl = document.getElementById('challenge-title');
+            const descriptionEl = document.getElementById('challenge-description');
+            
+            nodesContainer.innerHTML = appData.challenges.map(c => `
+                <div data-id="${c.id}" class="challenge-node cursor-pointer p-4 border border-gray-300 rounded-lg hover:bg-[#81C784] hover:text-white transition-colors text-center font-semibold">
+                    ${c.title}
+                </div>
+            `).join('');
+
+            nodesContainer.addEventListener('click', (e) => {
+                 if (e.target.classList.contains('challenge-node')) {
+                    const id = e.target.dataset.id;
+                    const challenge = appData.challenges.find(c => c.id === id);
+                    if (challenge) {
+                        titleEl.textContent = challenge.title;
+                        descriptionEl.textContent = challenge.description;
+                        document.querySelectorAll('.challenge-node').forEach(node => node.classList.remove('bg-[#81C784]', 'text-white'));
+                        e.target.classList.add('bg-[#81C784]', 'text-white');
+                    }
+                 }
+            });
+        };
+
+        const renderFutureTimeline = () => {
+            const timeline = document.getElementById('future-timeline');
+            timeline.innerHTML = appData.futureTimeline.map((item, index) => {
+                const isLeft = item.side === 'left';
+                return `
+                <div class="mb-8 flex justify-between ${isLeft ? 'flex-row-reverse' : ''} items-center w-full">
+                    <div class="hidden md:block w-5/12"></div>
+                    <div class="z-20 flex items-center bg-[#E07A5F] shadow-xl w-8 h-8 rounded-full">
+                        <h1 class="mx-auto text-white font-semibold text-lg"></h1>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-xl w-full md:w-5/12 p-4">
+                        <p class="text-gray-500 font-bold text-sm mb-1">${item.year}</p>
+                        <h3 class="font-bold text-lg mb-1">${item.title}</h3>
+                        <p class="text-sm leading-snug tracking-wide text-gray-700">${item.text}</p>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        };
+
+        const renderRecommendations = (role) => {
+            const contentEl = document.getElementById('reco-content');
+            const data = appData.recommendations[role];
+            if (!data) return;
+            
+            contentEl.innerHTML = `
+                <ul class="space-y-4 list-disc list-inside text-gray-700 bg-gray-50 p-8 rounded-2xl">
+                    ${data.content.map(item => `<li>${item}</li>`).join('')}
+                </ul>
+            `;
+        };
+
+        const setupRecoTabs = () => {
+            const tabsContainer = document.getElementById('reco-tabs');
+            tabsContainer.innerHTML = Object.keys(appData.recommendations).map((key, index) => `
+                <button data-role="${key}" class="tab whitespace-nowrap py-2 px-5 font-medium text-sm rounded-t-lg transition-colors ${index === 0 ? 'active' : ''}">
+                    ${appData.recommendations[key].title}
+                </button>
+            `).join('');
+
+            tabsContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('tab')) {
+                    const role = e.target.dataset.role;
+                    document.querySelectorAll('#reco-tabs .tab').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    renderRecommendations(role);
+                }
+            });
+        };
+
+        const setupNavScrollSpy = () => {
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            sections.forEach(section => observer.observe(section));
+        };
+
+        const initCharts = () => {
+            const promptMarketCtx = document.getElementById('promptMarketChart').getContext('2d');
+            new Chart(promptMarketCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['2024', '2025', '2034'],
+                    datasets: [{
+                        label: '시장 규모 (조 단위)',
+                        data: [0.38, 0.50, 6.5],
+                        backgroundColor: '#81C784',
+                        borderColor: '#66bb6a',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { callback: value => `${value}T` } } },
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.raw}조 달러` } } }
+                }
+            });
+
+            const llmMarketCtx = document.getElementById('llmMarketChart').getContext('2d');
+            new Chart(llmMarketCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['2024', '2033'],
+                    datasets: [{
+                        label: '시장 규모 (10억 단위)',
+                        data: [6.5, 87.5],
+                        backgroundColor: '#F4A261',
+                        borderColor: '#E07A5F',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { callback: value => `${value}B` } } },
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `${context.raw}0억 달러` } } }
+                }
+            });
+        };
+        
+        initCharts();
+        renderPlatformGrid();
+        renderBenefits('buyers');
+        setupStakeholderToggle();
+        setupChallengeNodes();
+        renderFutureTimeline();
+        setupRecoTabs();
+        renderRecommendations('buyers');
+        setupNavScrollSpy();
+    });
+    </script>
+</body>
+</html>
+
+
