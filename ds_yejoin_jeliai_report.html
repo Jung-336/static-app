@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeliAI 인터랙티브 분석 리포트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Visualization & Content Choices: 
+        - Key Metrics (Models, Agents): Goal=Inform -> Presentation=Info Cards -> Interaction=Static -> Justification=Quickly convey core stats.
+        - AI Multibrain: Goal=Organize -> Presentation=HTML/CSS Diagram -> Interaction=Subtle Animation -> Justification=Visually explain a complex, patented technical concept without using SVG.
+        - Domestic Competition (vs. A.dot): Goal=Compare -> Presentation=Bar Chart -> Interaction=Hover Tooltips -> Justification=Direct numerical comparison is best shown with a bar chart. -> Library=Chart.js/Canvas.
+        - Global Competition: Goal=Compare -> Presentation=Interactive Table -> Interaction=Click-to-highlight rows -> Justification=Allows detailed, multi-faceted comparison of features and pricing across several competitors in a structured way.
+        - SWOT Analysis: Goal=Organize -> Presentation=4-Quadrant Grid -> Interaction=Static -> Justification=Classic, intuitive layout for SWOT analysis.
+        - Roadmap: Goal=Change -> Presentation=Horizontal Timeline -> Interaction=Static -> Justification=Visually shows progression and future plans effectively.
+    -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f5f5f4; /* stone-100 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .active-nav {
+            color: #0284c7; /* sky-600 */
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-sky-700">ZeliAI</span>
+                    <span class="ml-2 text-sm text-slate-500">인터랙티브 분석</span>
+                </div>
+                <nav class="hidden md:flex space-x-8 text-sm font-medium text-slate-600">
+                    <a href="#overview" class="hover:text-sky-600 transition-colors duration-200">개요</a>
+                    <a href="#technology" class="hover:text-sky-600 transition-colors duration-200">핵심 기술</a>
+                    <a href="#competition" class="hover:text-sky-600 transition-colors duration-200">시장 경쟁</a>
+                    <a href="#swot" class="hover:text-sky-600 transition-colors duration-200">SWOT</a>
+                    <a href="#roadmap" class="hover:text-sky-600 transition-colors duration-200">로드맵</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section id="overview" class="text-center mb-16 md:mb-24 pt-16">
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">ZeliAI: AI 검색의 한계를 넘어서다</h1>
+            <p class="max-w-3xl mx-auto text-lg text-slate-600 mb-8">
+                (주)예진이 선보인 ZeliAI는 단순한 검색 포털을 넘어, 다수의 AI 모델을 통합하고 교차 검증하여 가장 신뢰성 높은 답변을 제공하는 차세대 AI 애그리게이터입니다. 이 인터랙티브 리포트는 ZeliAI의 핵심 가치와 시장 잠재력을 탐색합니다.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div class="bg-white p-6 rounded-xl shadow-md transition-transform hover:scale-105">
+                    <div class="text-sky-600 text-3xl font-bold">24+</div>
+                    <p class="text-slate-700 mt-2 font-medium">통합 글로벌 AI 모델</p>
+                    <p class="text-sm text-slate-500 mt-1">GPT-4.1, Gemini-2.5 등</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md transition-transform hover:scale-105">
+                    <div class="text-sky-600 text-3xl font-bold">100+</div>
+                    <p class="text-slate-700 mt-2 font-medium">전문 AI 에이전트 기능</p>
+                     <p class="text-sm text-slate-500 mt-1">8개 전문 분야 지원</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md transition-transform hover:scale-105">
+                    <div class="text-sky-600 text-3xl font-bold">25년</div>
+                    <p class="text-slate-700 mt-2 font-medium">개발사 (주)예진 업력</p>
+                    <p class="text-sm text-slate-500 mt-1">IT 솔루션 개발 경험</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="technology" class="mb-16 md:mb-24 pt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">핵심 기술: AI 멀티브레인</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-slate-600">
+                    ZeliAI의 가장 큰 차별점은 특허 기반의 'AI 멀티브레인' 아키텍처입니다. 이는 단일 AI의 한계를 극복하고 답변의 신뢰도를 극대화하기 위한 독자적인 기술입니다.
+                </p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <div class="flex flex-col md:flex-row items-center justify-center gap-8">
+                    <div class="flex-1 flex flex-col items-center gap-4">
+                        <div class="font-semibold text-lg text-slate-700">다중 AI 모델 입력</div>
+                        <div class="space-y-2 text-center">
+                            <div class="p-3 rounded-lg bg-slate-100 text-sm">GPT-4.1 답변</div>
+                            <div class="p-3 rounded-lg bg-slate-100 text-sm">Gemini-2.5 답변</div>
+                            <div class="p-3 rounded-lg bg-slate-100 text-sm">Claude-3.7 답변</div>
+                             <div class="p-3 rounded-lg bg-slate-100 text-sm">... 외 21개 모델</div>
+                        </div>
+                    </div>
+                    <div class="text-4xl text-sky-500 font-extrabold animate-pulse">→</div>
+                    <div class="flex-1 flex flex-col items-center text-center">
+                        <div class="font-semibold text-lg text-slate-700">AI 멀티브레인 엔진</div>
+                         <div class="w-48 h-48 my-4 bg-sky-100 rounded-full flex flex-col items-center justify-center p-4 border-4 border-sky-200">
+                             <p class="font-bold text-sky-800">교차 검증</p>
+                             <p class="text-sm text-sky-700">&</p>
+                             <p class="font-bold text-sky-800">정보 통합/최적화</p>
+                             <p class="text-xs text-slate-500 mt-2">(특허 기술)</p>
+                         </div>
+                    </div>
+                    <div class="text-4xl text-sky-500 font-extrabold animate-pulse">→</div>
+                    <div class="flex-1 flex flex-col items-center text-center">
+                        <div class="font-semibold text-lg text-slate-700">최종 사용자 답변</div>
+                         <div class="p-4 rounded-lg bg-sky-600 text-white w-full max-w-xs shadow-xl">
+                             <p class="font-bold">신뢰도 높은<br>단일 종합 답변</p>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="competition" class="mb-16 md:mb-24 pt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">시장 경쟁 환경 분석</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-slate-600">
+                    ZeliAI는 국내외 강력한 경쟁자들과 마주하고 있습니다. AI 모델 수와 서비스 특징을 중심으로 주요 경쟁 플랫폼과 비교 분석합니다.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold text-center mb-1">국내 경쟁: vs SKT A.dot</h3>
+                    <p class="text-center text-sm text-slate-500 mb-6">AI 애그리게이터 모델 수 비교</p>
+                    <div class="chart-container">
+                        <canvas id="domesticCompChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                     <h3 class="text-xl font-bold text-center mb-1">글로벌 경쟁 환경</h3>
+                     <p class="text-center text-sm text-slate-500 mb-6">주요 플랫폼 비교 (클릭하여 하이라이트)</p>
+                     <div class="overflow-x-auto">
+                        <table id="globalCompTable" class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 rounded-l-lg">플랫폼</th>
+                                    <th scope="col" class="px-4 py-3">핵심 특징</th>
+                                    <th scope="col" class="px-4 py-3 rounded-r-lg">가격(Pro)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b hover:bg-sky-50 cursor-pointer transition-colors duration-200">
+                                    <th scope="row" class="px-4 py-3 font-bold text-sky-700">ZeliAI</th>
+                                    <td class="px-4 py-3">AI 멀티브레인, 전문 에이전트</td>
+                                    <td class="px-4 py-3">베타 후 공개</td>
+                                </tr>
+                                <tr class="border-b hover:bg-sky-50 cursor-pointer transition-colors duration-200">
+                                    <th scope="row" class="px-4 py-3 font-medium">Perplexity AI</th>
+                                    <td class="px-4 py-3">출처 명시, Pro 검색, 기업용</td>
+                                    <td class="px-4 py-3">월 $20</td>
+                                </tr>
+                                <tr class="border-b hover:bg-sky-50 cursor-pointer transition-colors duration-200">
+                                    <th scope="row" class="px-4 py-3 font-medium">Poe by Quora</th>
+                                    <td class="px-4 py-3">커스텀 봇 생성 및 수익화</td>
+                                    <td class="px-4 py-3">월 ~$20</td>
+                                </tr>
+                                <tr class="hover:bg-sky-50 cursor-pointer transition-colors duration-200">
+                                    <th scope="row" class="px-4 py-3 font-medium">You.com</th>
+                                    <td class="px-4 py-3">개인화, 커스텀 데이터 업로드</td>
+                                    <td class="px-4 py-3">월 $15</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="swot" class="mb-16 md:mb-24 pt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">SWOT 분석</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-slate-600">
+                    ZeliAI의 내부 역량과 외부 환경 요인을 종합적으로 분석하여 강점, 약점, 기회, 위협 요인을 도출했습니다.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-green-100/50 border border-green-200 p-6 rounded-xl">
+                    <h3 class="font-bold text-lg text-green-800 mb-3">S (강점)</h3>
+                    <ul class="space-y-2 text-sm text-green-900 list-disc list-inside">
+                        <li>특허 기반 'AI 멀티브레인' 기술 보유</li>
+                        <li>24개 이상의 다양한 글로벌 AI 모델 통합</li>
+                        <li>8개 분야 100+ 전문 AI 에이전트 제공</li>
+                        <li>모기업 (주)예진의 25년 업력 및 기술력</li>
+                        <li>멀티모달 검색 기능 지원</li>
+                    </ul>
+                </div>
+                <div class="bg-red-100/50 border border-red-200 p-6 rounded-xl">
+                    <h3 class="font-bold text-lg text-red-800 mb-3">W (약점)</h3>
+                    <ul class="space-y-2 text-sm text-red-900 list-disc list-inside">
+                        <li>신규 진입자로 낮은 초기 브랜드 인지도</li>
+                        <li>제3자 AI 모델 API 정책 및 가격 변동에 대한 의존성</li>
+                        <li>베타 서비스 단계로 인한 실사용 데이터 검증 미비</li>
+                        <li>상세 UI/UX 정보 부족</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-100/50 border border-blue-200 p-6 rounded-xl">
+                    <h3 class="font-bold text-lg text-blue-800 mb-3">O (기회)</h3>
+                    <ul class="space-y-2 text-sm text-blue-900 list-disc list-inside">
+                        <li>신뢰성 높은 전문 AI 도구에 대한 수요 증가</li>
+                        <li>국내 시장 선점 후 글로벌 확장 잠재력</li>
+                        <li>'AI 창작자 지식 공유 플랫폼'을 통한 생태계 구축</li>
+                        <li>(주)예진의 기존 고객 기반 활용 가능성</li>
+                    </ul>
+                </div>
+                <div class="bg-yellow-100/50 border border-yellow-200 p-6 rounded-xl">
+                    <h3 class="font-bold text-lg text-yellow-800 mb-3">T (위협)</h3>
+                    <ul class="space-y-2 text-sm text-yellow-900 list-disc list-inside">
+                        <li>Perplexity, Poe 등 강력한 글로벌 경쟁자 다수 존재</li>
+                        <li>빠른 AI 기술 발전 속도와 시장 변화</li>
+                        <li>사용자 확보 및 유료 전환의 어려움</li>
+                        <li>AI 관련 데이터 활용, 저작권 등 규제 불확실성</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="roadmap" class="pt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">미래 로드맵과 비전</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-slate-600">
+                    ZeliAI는 단순한 검색 도구를 넘어, 지식 공유 플랫폼과 글로벌 서비스로의 확장을 목표로 하는 명확한 로드맵을 가지고 있습니다.
+                </p>
+            </div>
+            <div class="relative w-full">
+                <div class="absolute left-1/2 h-full w-0.5 bg-sky-200 hidden md:block"></div>
+                <div class="space-y-12">
+                    <div class="relative flex items-center md:justify-start">
+                        <div class="hidden md:block w-1/2"></div>
+                        <div class="hidden md:block absolute w-4 h-4 rounded-full bg-sky-600 left-1/2 -translate-x-1/2"></div>
+                        <div class="w-full md:w-1/2 md:pl-8">
+                            <div class="bg-white p-6 rounded-xl shadow-lg">
+                                <p class="text-sky-600 font-bold">2025년 6월</p>
+                                <h4 class="font-bold text-lg mt-1">오픈 베타 서비스 시작</h4>
+                                <p class="text-sm text-slate-600 mt-2">서비스 안정화 및 사용자 피드백 수집 기간</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative flex items-center md:justify-end">
+                        <div class="hidden md:block w-1/2 pr-8 text-right"></div>
+                        <div class="hidden md:block w-1/2 pl-8"></div>
+                         <div class="hidden md:block absolute w-4 h-4 rounded-full bg-sky-600 left-1/2 -translate-x-1/2"></div>
+                        <div class="w-full md:w-1/2 md:pr-8 md:text-right">
+                            <div class="bg-white p-6 rounded-xl shadow-lg">
+                                <p class="text-sky-600 font-bold">2025년 8월</p>
+                                <h4 class="font-bold text-lg mt-1">정식 유료 서비스 전환</h4>
+                                <p class="text-sm text-slate-600 mt-2">합리적인 토큰 사용량 기반의 유료 모델 도입</p>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="relative flex items-center md:justify-start">
+                        <div class="hidden md:block w-1/2"></div>
+                        <div class="hidden md:block absolute w-4 h-4 rounded-full bg-sky-600 left-1/2 -translate-x-1/2"></div>
+                        <div class="w-full md:w-1/2 md:pl-8">
+                            <div class="bg-white p-6 rounded-xl shadow-lg">
+                                <p class="text-sky-600 font-bold">베타 기간 중</p>
+                                <h4 class="font-bold text-lg mt-1">AI 창작자 지식 공유 플랫폼 구축</h4>
+                                <p class="text-sm text-slate-600 mt-2">사용자 참여 기반의 데이터 마켓플레이스 및 생태계 조성</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative flex items-center md:justify-end">
+                        <div class="hidden md:block w-1/2 pr-8 text-right"></div>
+                        <div class="hidden md:block w-1/2 pl-8"></div>
+                        <div class="hidden md:block absolute w-4 h-4 rounded-full bg-sky-600 left-1/2 -translate-x-1/2"></div>
+                        <div class="w-full md:w-1/2 md:pr-8 md:text-right">
+                           <div class="bg-white p-6 rounded-xl shadow-lg">
+                                <p class="text-sky-600 font-bold">장기 비전</p>
+                                <h4 class="font-bold text-lg mt-1">글로벌 플랫폼 및 휴머노이드 로봇</h4>
+                                <p class="text-sm text-slate-600 mt-2">정보 격차 해소, AI Optimus 프로젝트를 통한 최종 목표</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-white mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm">
+            <p>&copy; 2025. 본 인터랙티브 리포트는 제공된 'ZeliAI 서비스 심층 연구 분석 보고서'를 기반으로 제작되었습니다.</p>
+            <p class="text-slate-400 mt-1">개발사: (주)예진 (Yejin Co., Ltd.)</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const domesticCompCtx = document.getElementById('domesticCompChart').getContext('2d');
+            const domesticCompChart = new Chart(domesticCompCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['ZeliAI', 'SKT A.dot'],
+                    datasets: [{
+                        label: '통합 AI 모델 수',
+                        data: [24, 17],
+                        backgroundColor: [
+                            'rgba(2, 132, 199, 0.7)', // sky-600
+                            'rgba(100, 116, 139, 0.7)' // slate-500
+                        ],
+                        borderColor: [
+                            'rgba(2, 132, 199, 1)',
+                            'rgba(100, 116, 139, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}개`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(203, 213, 225, 0.3)'
+                            },
+                             ticks: {
+                                callback: function(value) {
+                                    return value + '개'
+                                }
+                            }
+                        },
+                        x: {
+                           grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            const table = document.getElementById('globalCompTable');
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                row.addEventListener('click', () => {
+                    rows.forEach(r => r.classList.remove('bg-sky-100', 'font-bold'));
+                    row.classList.add('bg-sky-100', 'font-bold');
+                });
+            });
+
+            const navLinks = document.querySelectorAll('header nav a');
+            const sections = document.querySelectorAll('main section');
+
+            function changeNavOnScroll() {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active-nav');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active-nav');
+                    }
+                });
+            }
+
+            window.addEventListener('scroll', changeNavOnScroll);
+            changeNavOnScroll();
+        });
+    </script>
+</body>
+</html>
